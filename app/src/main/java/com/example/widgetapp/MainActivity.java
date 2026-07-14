@@ -21,4 +21,8 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
     }
+
+    void Click() {
+        int number = 1 + 1;
+    }
 }
