@@ -6,4 +6,10 @@
     </style>
 
     <style name="Theme.WidgetApp" parent="Base.Theme.WidgetApp" />
+    <style name="Theme.WidgetApp.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+    <style name="Theme.WidgetApp.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+    <style name="Theme.WidgetApp.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 </resources>
