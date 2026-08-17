@@ -1,4 +1,4 @@
-package com.example.widgetapp;
+package com.example.widgetapp.widgets.image;
 
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
@@ -6,6 +6,9 @@ import android.appwidget.AppWidgetProvider;
 import android.content.Context;
 import android.content.Intent;
 import android.widget.RemoteViews;
+
+import com.example.widgetapp.MainActivity;
+import com.example.widgetapp.R;
 
 public class WidgetProviderImages extends AppWidgetProvider {
 

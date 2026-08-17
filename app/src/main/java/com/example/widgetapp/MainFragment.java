@@ -1,5 +1,7 @@
 package com.example.widgetapp;
 
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
