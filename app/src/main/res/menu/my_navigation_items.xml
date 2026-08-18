@@ -1,16 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item android:id="@+id/main"
+    <item android:id="@+id/widgets"
         android:title="@string/menu_widgets"
-        android:icon="@drawable/ic_launcher_foreground" />
+        android:icon="@drawable/widget_icon" />
 
     <item android:id="@+id/settings"
         android:title="@string/menu_settings"
-        android:icon="@drawable/ic_launcher_foreground" />
+        android:icon="@drawable/settings_icon" />
 
     <item android:id="@+id/info"
         android:title="@string/menu_info"
-        android:icon="@drawable/ic_launcher_foreground" />
-
+        android:icon="@drawable/info_icon" />
 </menu>

@@ -1,7 +1,5 @@
 package com.example.widgetapp;
 
-import android.appwidget.AppWidgetManager;
-import android.content.ComponentName;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -12,12 +10,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-public class MainFragment extends Fragment {
+public class WidgetFragment extends Fragment {
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_main, container, false);
+        return inflater.inflate(R.layout.fragment_widgets, container, false);
     }
 }

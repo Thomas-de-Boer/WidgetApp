@@ -102,6 +102,109 @@
         <item>Either write something worth reading or do something worth writing.</item>
         <item>Nothing is impossible, the word itself says, “I’m possible!”</item>
         <item>The only way to do great work is to love what you do.</item>
-        <item>If you can dream it, you can achieve it.</item>
+    </string-array>
+
+    <string-array name="fun_facts">
+        <item>A crocodile can’t stick out its tongue</item>
+        <item>Apples are 25% air</item>
+        <item>A sneeze can travel as fast as 100 miles per hour</item>
+        <item>All polar bears are left handed</item>
+        <item>A jellyfish is 95% water</item>
+        <item>Ants don’t sleep</item>
+        <item>A hummingbird’s heart beats over 1,000 times a minute</item>
+        <item>A mole can dig a tunnel 300 feet long in one night</item>
+        <item>A shrimp’s heart is in its head</item>
+        <item>A snail can sleep for three years</item>
+        <item>A blue whale’s heart is the size of a Volkswagen Beetle</item>
+        <item>A cat has 32 muscles in each ear</item>
+        <item>A chameleon’s tongue is twice the length of its body</item>
+        <item>A cow gives nearly 200,000 glasses of milk in her lifetime</item>
+        <item>A dragonfly can fly at 40kph</item>
+        <item>A flea can jump 350 times its body length</item>
+        <item>A full-grown bear can run as fast as a horse</item>
+        <item>A giraffe can clean its ears with its 21-inch tongue</item>
+        <item>A group of owls is called a parliament</item>
+        <item>A group of kangaroos is called a mob</item>
+        <item>A group of geese in the air is called a skein</item>
+        <item>A hard boiled egg will spin</item>
+        <item>A hippo can open its mouth wide enough to fit a 4‑foot child</item>
+        <item>A hummingbird flaps its wings up to 90 times a second</item>
+        <item>A jellyfish has no brain</item>
+        <item>A lion’s roar can be heard from 5 miles away</item>
+        <item>A lump of pure gold the size of a matchbox can be flattened into a sheet the size of a tennis court</item>
+        <item>A newborn kangaroo is about 1 inch tall</item>
+        <item>A peanut is not a nut, it is a legume</item>
+        <item>A platypus can eat its weight in worms every day</item>
+        <item>A rat can fall from a five‑story building without injury</item>
+        <item>A roach can live up to nine days without its head</item>
+        <item>A shark’s teeth are as hard as steel</item>
+        <item>A sneeze travels out your mouth at over 100 mph</item>
+        <item>A spider’s silk is stronger than steel</item>
+        <item>A tuna fish can swim 100 miles in a single day</item>
+        <item>A violin contains about 70 separate pieces of wood</item>
+        <item>A woodpecker can peck 20 times a second</item>
+        <item>A zebra is white with black stripes</item>
+        <item>All insects have 6 legs</item>
+        <item>All babies are color-blind at birth</item>
+        <item>All snakes are carnivorous</item>
+        <item>All species of beetles are edible</item>
+        <item>All the planets in our solar system could fit inside Jupiter</item>
+        <item>Ancient Egyptians slept on pillows made of stone</item>
+        <item>Antarctica is 98% ice</item>
+        <item>Apples are part of the rose family</item>
+        <item>Armored armadillos can walk underwater</item>
+        <item>At birth, panda bears are smaller than mice</item>
+        <item>At 120 mph, a Formula One car can drive upside down</item>
+        <item>Avocados have more protein than any other fruit</item>
+        <item>Babe Ruth wore a cabbage leaf under his cap to stay cool</item>
+        <item>Bananas are 75% water</item>
+        <item>Beavers are called kittens when they are babies</item>
+        <item>Blue whales can go 6 months without eating</item>
+        <item>Butterflies taste with their feet</item>
+        <item>Cats can keep purring while inhaling and exhaling</item>
+        <item>Chameleons can move their eyes independently</item>
+        <item>Chocolate contains more antioxidants than tea</item>
+        <item>Crocodiles can’t move their tongues</item>
+        <item>Dogs have about 1,700 taste buds</item>
+        <item>Dolphins sleep with one eye open</item>
+        <item>Dragonflies have a lifespan of 24 hours</item>
+        <item>Elephants can smell water from 3 miles away</item>
+        <item>Elephants are the only mammals that can’t jump</item>
+        <item>Every year 7,000 new insect species are discovered</item>
+        <item>Fireflies are beetles, not flies</item>
+        <item>Flamingos are pink because of their diet</item>
+        <item>Frogs absorb water through their skin</item>
+        <item>Giraffes have the same number of neck bones as humans</item>
+        <item>Goldfish have a memory span of several months</item>
+        <item>Honeybees can recognize human faces</item>
+        <item>Horses can’t vomit</item>
+        <item>Hot water freezes faster than cold water</item>
+        <item>Human bones are stronger than concrete</item>
+        <item>Humans share 98% of their DNA with chimpanzees</item>
+        <item>Koalas sleep 22 hours a day</item>
+        <item>Lions feed once every 3–4 days</item>
+        <item>Male cats are called toms</item>
+        <item>Octopuses have three hearts</item>
+        <item>Ostriches have eyes bigger than their brains</item>
+        <item>Owls cannot move their eyes</item>
+        <item>Peanuts are used to make dynamite</item>
+        <item>Pigs cannot look up at the sky</item>
+        <item>Polar bears have black skin</item>
+        <item>Rats can tread water for 3 days</item>
+        <item>Sharks never get sick</item>
+        <item>Slugs have four noses</item>
+        <item>Snails have 14,000 teeth</item>
+        <item>Spiders have blue blood</item>
+        <item>Starfish have no brains</item>
+        <item>Termites eat wood twice as fast when listening to rock music</item>
+        <item>Tigers have striped skin, not just striped fur</item>
+        <item>Turkeys can blush</item>
+        <item>Whales can live for over 200 years</item>
+        <item>Worms have five hearts</item>
+        <item>Zebras can’t see the color orange</item>
+        <item>A crocodile’s digestive juices are so strong that it can digest a steel nail</item>
+        <item>Koala bears sleep up to 22 hours per day</item>
+        <item>A blue whale’s aorta is large enough for a human to crawl through</item>
+        <item>Termites eat wood twice as fast when listening to rock music</item>
     </string-array>
 </resources>

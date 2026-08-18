@@ -18,7 +18,7 @@ public class WidgetProviderQuotes extends AppWidgetProvider {
 
         for (int appWidgetId: appWidgetIds) {
 
-            RemoteViews views = QuotesWidgetHelper.SelectQoute(context);
+            RemoteViews views = QuotesWidgetHelper.makeView(context);
 
             appWidgetManager.updateAppWidget(appWidgetId, views);
         }

@@ -11,7 +11,7 @@ import com.example.widgetapp.R;
 import java.util.Random;
 
 public class QuotesWidgetHelper {
-    public static RemoteViews SelectQoute(Context context) {
+    public static RemoteViews makeView(Context context) {
         Intent intent = new Intent(context, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_MUTABLE);
 
