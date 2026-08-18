@@ -4,5 +4,7 @@
     <string name="menu_widgets">Widgets</string>
     <string name="menu_info">Info</string>
 
-    <string name="quote">Quote</string>
+    <string name="standard_quote">Believe you can and you’re halfway there.</string>
+    <string name="quote_widget_name">Quote/Fun Fact Widget</string>
+    <string name="quote_widget_description">A widget displaying quotes and fun facts</string>
 </resources>
