@@ -1,14 +1,12 @@
 package com.example.widgetapp;
 
 import android.appwidget.AppWidgetHost;
-import android.appwidget.AppWidgetHostView;
 import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -16,7 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
-public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.MyViewHolder> {
+public class RecyclerItemAdapter extends RecyclerView.Adapter<RecyclerItemAdapter.MyViewHolder> {
 
     private final List<WidgetItem> widgetItemList;
     public AppWidgetManager appWidgetManager;
@@ -24,7 +22,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.MyView
     public Context context;
 
     // Constructor
-    public RecyclerAdapter(List<WidgetItem> widgetItemList, AppWidgetManager appWidgetManager, AppWidgetHost appWidgetHost, Context context) {
+    public RecyclerItemAdapter(List<WidgetItem> widgetItemList, AppWidgetManager appWidgetManager, AppWidgetHost appWidgetHost, Context context) {
         this.widgetItemList = widgetItemList;
         this.appWidgetManager = appWidgetManager;
         this.appWidgetHost = appWidgetHost;
@@ -39,19 +37,20 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.MyView
         return new MyViewHolder(view);
     }
 
+
     @Override
     public void onBindViewHolder(@NonNull MyViewHolder viewHolder, int position) {
         WidgetItem widgetItem = widgetItemList.get(position);
 
-        if (widgetItem.widgetType == WidgetItem.widgetTypes.QUOTES) {
-            viewHolder.widget_item_text.setText("Quote");
-        }
-        else if (widgetItem.widgetType == WidgetItem.widgetTypes.IMAGES) {
-            viewHolder.widget_item_text.setText("Image");
-        }
-        else if (widgetItem.widgetType == WidgetItem.widgetTypes.IMAGES_SMALL) {
-            viewHolder.widget_item_text.setText("Image small");
-        }
+//        if (widgetItem.widgetType == WidgetItem.widgetTypes.QUOTES) {
+//            viewHolder.widget_item_text.setText("Quote");
+//        }
+//        else if (widgetItem.widgetType == WidgetItem.widgetTypes.IMAGES) {
+//            viewHolder.widget_item_text.setText("Image");
+//        }
+//        else if (widgetItem.widgetType == WidgetItem.widgetTypes.IMAGES_SMALL) {
+//            viewHolder.widget_item_text.setText("Image small");
+//        }
 
 
         View view = appWidgetHost.createView(context, widgetItem.get_id(), appWidgetManager.getAppWidgetInfo(widgetItem.get_id()));
@@ -70,14 +69,12 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.MyView
 
     // ViewHolder class
     public static class MyViewHolder extends RecyclerView.ViewHolder {
-        TextView widget_item_text;
         FrameLayout widget_item_widget_view;
 
         public MyViewHolder(@NonNull View itemView) {
 
             super(itemView);
 
-            widget_item_text = itemView.findViewById(R.id.widget_item_text);
             widget_item_widget_view = itemView.findViewById(R.id.widget_item_widget_view);
         }
     }

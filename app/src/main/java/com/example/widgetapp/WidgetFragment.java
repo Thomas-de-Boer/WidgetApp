@@ -29,13 +29,14 @@ import java.util.List;
 public class WidgetFragment extends Fragment {
     Context context;
     AppWidgetManager appWidgetManager;
-    RecyclerAdapter adapter;
+    RecyclerRowAdapter adapter;
     View text;
     AppWidgetHost appWidgetHost;
 
 
     HashMap<Class<? extends AppWidgetProvider>, WidgetItem.widgetTypes> classAndEnums = new HashMap<>();
     List<WidgetItem> widgetList = new ArrayList<>();
+    List<WidgetItem.widgetTypes> widgetTypeList = new ArrayList<>();
 
     public WidgetFragment() {
         classAndEnums.put(WidgetProviderQuotes.class, WidgetItem.widgetTypes.QUOTES);
@@ -62,7 +63,7 @@ public class WidgetFragment extends Fragment {
         appWidgetManager = AppWidgetManager.getInstance(context);
         appWidgetHost = new AppWidgetHost(context, 1);
 
-        adapter = new RecyclerAdapter(widgetList, appWidgetManager, appWidgetHost , context);
+        adapter = new RecyclerRowAdapter(widgetTypeList, widgetList, appWidgetManager, appWidgetHost , context);
 
         text = view.findViewById(R.id.fragment_widgets_text);
 
@@ -72,6 +73,16 @@ public class WidgetFragment extends Fragment {
         RecyclerView recyclerView = view.findViewById(R.id.fragment_widgets_recyclerview);
 
         widgetList = buildWidgetList();
+
+
+        for (WidgetItem widgetItem: widgetList) {
+            if (widgetTypeList.contains(widgetItem.widgetType)) {
+                continue;
+            }
+            widgetTypeList.add(widgetItem.widgetType);
+        }
+
+
 
         recyclerView.setLayoutManager(new LinearLayoutManager(context));
 
@@ -96,13 +107,6 @@ public class WidgetFragment extends Fragment {
             text.setVisibility(View.INVISIBLE);
         }
         else { text.setVisibility(View.VISIBLE); }
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-
-
     }
 
     @Override
