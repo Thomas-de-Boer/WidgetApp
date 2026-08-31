@@ -1,13 +1,12 @@
-package com.example.widgetapp;
+package com.example.widgetapp.recyclers;
 
 public class WidgetItem {
     public enum widgetTypes {
         QUOTES,
         IMAGES,
-        IMAGES_SMALL
     }
     int widgetId;
-    widgetTypes widgetType;
+    public widgetTypes widgetType;
 
     public WidgetItem(int widgetId, widgetTypes widgetType) {
         this.widgetId = widgetId;

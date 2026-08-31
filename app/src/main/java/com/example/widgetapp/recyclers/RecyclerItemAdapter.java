@@ -1,4 +1,4 @@
-package com.example.widgetapp;
+package com.example.widgetapp.recyclers;
 
 import android.appwidget.AppWidgetHost;
 import android.appwidget.AppWidgetManager;
@@ -7,10 +7,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.widgetapp.R;
 
 import java.util.List;
 
@@ -54,6 +55,8 @@ public class RecyclerItemAdapter extends RecyclerView.Adapter<RecyclerItemAdapte
 
 
         View view = appWidgetHost.createView(context, widgetItem.get_id(), appWidgetManager.getAppWidgetInfo(widgetItem.get_id()));
+
+        view.setPadding(0, 0, 0, 0);
 
         viewHolder.widget_item_widget_view.removeAllViews();
         viewHolder.widget_item_widget_view.addView(view);

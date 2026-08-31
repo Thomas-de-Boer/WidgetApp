@@ -31,16 +31,6 @@
                 android:resource="@xml/widget_images_info" />
         </receiver>
 
-        <receiver android:name=".widgets.image.WidgetProviderImagesSmall" android:exported="true">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/widget_images_small_info" />
-        </receiver>
-
-
 
         <receiver android:name=".widgets.quote.WidgetProviderQuotes" android:exported="true" android:label="@string/quote_widget_name">
             <intent-filter>

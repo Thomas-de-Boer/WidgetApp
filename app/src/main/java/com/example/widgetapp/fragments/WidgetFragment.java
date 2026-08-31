@@ -1,4 +1,4 @@
-package com.example.widgetapp;
+package com.example.widgetapp.fragments;
 
 import android.appwidget.AppWidgetHost;
 import android.appwidget.AppWidgetManager;
@@ -11,6 +11,7 @@ import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -18,8 +19,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.example.widgetapp.R;
+import com.example.widgetapp.recyclers.RecyclerRowAdapter;
+import com.example.widgetapp.recyclers.WidgetItem;
 import com.example.widgetapp.widgets.image.WidgetProviderImages;
-import com.example.widgetapp.widgets.image.WidgetProviderImagesSmall;
 import com.example.widgetapp.widgets.quote.WidgetProviderQuotes;
 
 import java.util.ArrayList;
@@ -31,7 +34,9 @@ public class WidgetFragment extends Fragment {
     AppWidgetManager appWidgetManager;
     RecyclerRowAdapter adapter;
     View text;
+    RecyclerView recyclerView;
     AppWidgetHost appWidgetHost;
+    FragmentManager fragmentManager;
 
 
     HashMap<Class<? extends AppWidgetProvider>, WidgetItem.widgetTypes> classAndEnums = new HashMap<>();
@@ -41,7 +46,6 @@ public class WidgetFragment extends Fragment {
     public WidgetFragment() {
         classAndEnums.put(WidgetProviderQuotes.class, WidgetItem.widgetTypes.QUOTES);
         classAndEnums.put(WidgetProviderImages.class, WidgetItem.widgetTypes.IMAGES);
-        classAndEnums.put(WidgetProviderImagesSmall.class, WidgetItem.widgetTypes.IMAGES_SMALL);
     }
 
 
@@ -59,54 +63,46 @@ public class WidgetFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+//        initiate a bunch of variables
         context = requireActivity().getApplicationContext();
         appWidgetManager = AppWidgetManager.getInstance(context);
-        appWidgetHost = new AppWidgetHost(context, 1);
+//        haha 67
+        appWidgetHost = new AppWidgetHost(context, 67);
+        fragmentManager = requireActivity().getSupportFragmentManager();
 
-        adapter = new RecyclerRowAdapter(widgetTypeList, widgetList, appWidgetManager, appWidgetHost , context);
+        adapter = new RecyclerRowAdapter(widgetTypeList, widgetList, appWidgetManager, appWidgetHost , context, fragmentManager);
 
         text = view.findViewById(R.id.fragment_widgets_text);
+        recyclerView = view.findViewById(R.id.fragment_widgets_recyclerview);
 
+//        start listening for widget updates
         appWidgetHost.startListening();
 
-
-        RecyclerView recyclerView = view.findViewById(R.id.fragment_widgets_recyclerview);
-
+//        fill lists with WidgetItems and widgetTypes
         widgetList = buildWidgetList();
+        widgetTypeList = buildWidgetTypeList(widgetList);
 
-
-        for (WidgetItem widgetItem: widgetList) {
-            if (widgetTypeList.contains(widgetItem.widgetType)) {
-                continue;
-            }
-            widgetTypeList.add(widgetItem.widgetType);
-        }
-
-
-
+//        activate the recyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(context));
-
         recyclerView.setAdapter(adapter);
 
-
-        if (adapter.getItemCount() != 0) {
-            text.setVisibility(View.INVISIBLE);
-        }
-        else { text.setVisibility(View.VISIBLE); }
+//        if the adapter is empty/filled make the explain text visible/invisible
+        checkListFilled(adapter, text);
     }
 
     @Override
     public void onResume() {
         super.onResume();
 
+//        build lists again to check for updates
         widgetList = buildWidgetList();
+        widgetTypeList = buildWidgetTypeList(widgetList);
 
+//        tell the adapter that dataset has changed so it updates the displayed widgets
         adapter.notifyDataSetChanged();
 
-        if (adapter.getItemCount() != 0) {
-            text.setVisibility(View.INVISIBLE);
-        }
-        else { text.setVisibility(View.VISIBLE); }
+//        same as above... makes text visible/invisible
+        checkListFilled(adapter, text);
     }
 
     @Override
@@ -136,5 +132,24 @@ public class WidgetFragment extends Fragment {
             }
         }
         return widgetList;
+    }
+
+    public void checkListFilled(RecyclerRowAdapter adapter, View text) {
+        if (adapter.getItemCount() != 0) {
+            text.setVisibility(View.INVISIBLE);
+        }
+        else { text.setVisibility(View.VISIBLE); }
+    }
+
+    public List<WidgetItem.widgetTypes> buildWidgetTypeList(List<WidgetItem> widgetList) {
+        widgetTypeList.clear();
+
+        for (WidgetItem widgetItem: widgetList) {
+            if (widgetTypeList.contains(widgetItem.widgetType)) {
+                continue;
+            }
+            widgetTypeList.add(widgetItem.widgetType);
+        }
+        return widgetTypeList;
     }
 }

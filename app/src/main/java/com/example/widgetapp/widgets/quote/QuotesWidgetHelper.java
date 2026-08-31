@@ -12,7 +12,7 @@ import java.util.Arrays;
 import java.util.Random;
 
 public class QuotesWidgetHelper {
-    static double weight = 0.3;
+    static double weight = 0.8;
     public static RemoteViews makeView(Context context) {
         Intent intent = new Intent(context, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_MUTABLE);
@@ -30,7 +30,7 @@ public class QuotesWidgetHelper {
 
 
 //        get all images and select a random one
-        int[] images = {R.drawable.quote_background1, R.drawable.quote_background2, R.drawable.quote_background3, R.drawable.quote_background4, R.drawable.quote_background5, R.drawable.quote_background6};
+        int[] images = {R.drawable.quote_background1, R.drawable.quote_background2, R.drawable.quote_background3, R.drawable.quote_background4, R.drawable.quote_background5, R.drawable.quote_background6, R.drawable.quote_background7, R.drawable.quote_background8};
         int randomImage = images[new Random().nextInt(images.length)];
 
 //        choose and set the chosen text in the text element

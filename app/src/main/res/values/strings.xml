@@ -10,7 +10,14 @@
     <string name="fragment_info_tutorial_body">1. Touch and hold an empty area on your home screen until a menu appears.\n 2. Look for "Widgets" in that menu.\n 3. Find Widget App in the list, then touch and hold the widget you want.\n 4. Drag it to the spot on your home screen where you want it, and release.</string>
     <string name="fragment_info_tutorial_disclaimer">Steps can vary slightly depending on your phone brand. If this doesn’t quite match your device, search online for "how to add a widget on [your phone brand]" for exact instructions.</string>
 
-    <string name="standard_quote">Believe you can and you’re halfway there.</string>
+<!--    <string name="standard_quote">Believe you can and you’re halfway there.</string>-->
     <string name="quote_widget_name">Quote/Fun Fact Widget</string>
     <string name="quote_widget_description">A widget displaying quotes and fun facts</string>
+
+    <string name="image_widget_name">Image Widget</string>
+
+    <string name="done">continue</string>
+    <string name="info_quotes">cool info</string>
+    <string name="info_images">cool info</string>
+
 </resources>

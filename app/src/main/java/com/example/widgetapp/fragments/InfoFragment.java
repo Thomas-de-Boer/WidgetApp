@@ -1,4 +1,4 @@
-package com.example.widgetapp;
+package com.example.widgetapp.fragments;
 
 import android.os.Bundle;
 
@@ -9,6 +9,8 @@ import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.example.widgetapp.R;
 
 public class InfoFragment extends Fragment {
 

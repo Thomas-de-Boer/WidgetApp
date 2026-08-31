@@ -1,37 +1,51 @@
-package com.example.widgetapp;
+package com.example.widgetapp.recyclers;
 
 import android.appwidget.AppWidgetHost;
 import android.appwidget.AppWidgetManager;
+import android.appwidget.AppWidgetProvider;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.widgetapp.InfoDialogFragment;
+import com.example.widgetapp.R;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class RecyclerRowAdapter extends RecyclerView.Adapter<RecyclerRowAdapter.MyViewHolder> {
 
     private final List<WidgetItem> widgetItemList;
-    private final List<WidgetItem> widgetItemListType;
     private final List<WidgetItem.widgetTypes> widgetTypes;
     public AppWidgetManager appWidgetManager;
     public AppWidgetHost appWidgetHost;
     public Context context;
+    public FragmentManager fragmentManager;
+
+    HashMap<WidgetItem.widgetTypes, Integer> typeToString = new HashMap<>();
 
     // Constructor
-    public RecyclerRowAdapter(List<WidgetItem.widgetTypes> widgetTypes, List<WidgetItem> widgetItemList, AppWidgetManager appWidgetManager, AppWidgetHost appWidgetHost, Context context) {
+    public RecyclerRowAdapter(List<WidgetItem.widgetTypes> widgetTypes, List<WidgetItem> widgetItemList, AppWidgetManager appWidgetManager, AppWidgetHost appWidgetHost, Context context, FragmentManager fragmentManager) {
         this.widgetItemList = widgetItemList;
         this.appWidgetManager = appWidgetManager;
         this.appWidgetHost = appWidgetHost;
         this.context = context;
         this.widgetTypes = widgetTypes;
-        widgetItemListType = new ArrayList<>();
+        this.fragmentManager = fragmentManager;
+
+
+        typeToString.put(WidgetItem.widgetTypes.QUOTES, R.string.info_quotes);
+        typeToString.put(WidgetItem.widgetTypes.IMAGES, R.string.info_images);
     }
 
     @NonNull
@@ -47,17 +61,14 @@ public class RecyclerRowAdapter extends RecyclerView.Adapter<RecyclerRowAdapter.
         WidgetItem.widgetTypes widgetType = widgetTypes.get(position);
 
         if (widgetType == WidgetItem.widgetTypes.QUOTES) {
-            viewHolder.widget_item_row_text.setText("Quote");
+            viewHolder.widget_item_row_text.setText(R.string.quote_widget_name);
         }
         else if (widgetType == WidgetItem.widgetTypes.IMAGES) {
-            viewHolder.widget_item_row_text.setText("Image");
-        }
-        else if (widgetType == WidgetItem.widgetTypes.IMAGES_SMALL) {
-            viewHolder.widget_item_row_text.setText("Image small");
+            viewHolder.widget_item_row_text.setText(R.string.image_widget_name);
         }
 
 
-        widgetItemListType.clear();
+        List<WidgetItem> widgetItemListType = new ArrayList<>();
         for (WidgetItem widgetItem : widgetItemList) {
             if (widgetItem.get_type() == widgetType) {
                 widgetItemListType.add(widgetItem);
@@ -65,8 +76,16 @@ public class RecyclerRowAdapter extends RecyclerView.Adapter<RecyclerRowAdapter.
         }
 
 
-        RecyclerItemAdapter adapter = new RecyclerItemAdapter(widgetItemListType, appWidgetManager, appWidgetHost , context);
+        viewHolder.widget_item_row_image.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                InfoDialogFragment infoDialogFragment = new InfoDialogFragment(typeToString.get(widgetType));
+                infoDialogFragment.show(fragmentManager, "INFO_DIALOG");
+            }
+        });
 
+
+        RecyclerItemAdapter adapter = new RecyclerItemAdapter(widgetItemListType, appWidgetManager, appWidgetHost , context);
 
         viewHolder.widget_item_row_recycler.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false));
         viewHolder.widget_item_row_recycler.setAdapter(adapter);
@@ -89,6 +108,7 @@ public class RecyclerRowAdapter extends RecyclerView.Adapter<RecyclerRowAdapter.
     // ViewHolder class
     public static class MyViewHolder extends RecyclerView.ViewHolder {
         TextView widget_item_row_text;
+        ImageView widget_item_row_image;
         RecyclerView widget_item_row_recycler;
 
         public MyViewHolder(@NonNull View itemView) {
@@ -96,6 +116,7 @@ public class RecyclerRowAdapter extends RecyclerView.Adapter<RecyclerRowAdapter.
             super(itemView);
 
             widget_item_row_text = itemView.findViewById(R.id.widget_item_row_text);
+            widget_item_row_image = itemView.findViewById(R.id.widget_item_row_image);
             widget_item_row_recycler = itemView.findViewById(R.id.widget_item_row_recycler);
         }
     }
