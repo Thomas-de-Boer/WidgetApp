@@ -11,6 +11,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -18,6 +20,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.widgetapp.InfoDialogFragment;
 import com.example.widgetapp.R;
+import com.example.widgetapp.WidgetSettingsListener;
+import com.example.widgetapp.fragments.ImagesSettingsFragment;
+import com.example.widgetapp.fragments.QuotesSettingsFragment;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,17 +36,20 @@ public class RecyclerRowAdapter extends RecyclerView.Adapter<RecyclerRowAdapter.
     public AppWidgetHost appWidgetHost;
     public Context context;
     public FragmentManager fragmentManager;
+    public WidgetSettingsListener listener;
 
     HashMap<WidgetItem.widgetTypes, Integer> typeToString = new HashMap<>();
 
+
     // Constructor
-    public RecyclerRowAdapter(List<WidgetItem.widgetTypes> widgetTypes, List<WidgetItem> widgetItemList, AppWidgetManager appWidgetManager, AppWidgetHost appWidgetHost, Context context, FragmentManager fragmentManager) {
+    public RecyclerRowAdapter(List<WidgetItem.widgetTypes> widgetTypes, List<WidgetItem> widgetItemList, AppWidgetManager appWidgetManager, AppWidgetHost appWidgetHost, Context context, FragmentManager fragmentManager, WidgetSettingsListener listener) {
         this.widgetItemList = widgetItemList;
         this.appWidgetManager = appWidgetManager;
         this.appWidgetHost = appWidgetHost;
         this.context = context;
         this.widgetTypes = widgetTypes;
         this.fragmentManager = fragmentManager;
+        this.listener = listener;
 
 
         typeToString.put(WidgetItem.widgetTypes.QUOTES, R.string.info_quotes);
@@ -76,16 +84,12 @@ public class RecyclerRowAdapter extends RecyclerView.Adapter<RecyclerRowAdapter.
         }
 
 
-        viewHolder.widget_item_row_image.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                InfoDialogFragment infoDialogFragment = new InfoDialogFragment(typeToString.get(widgetType));
-                infoDialogFragment.show(fragmentManager, "INFO_DIALOG");
-            }
+        viewHolder.widget_item_row_image.setOnClickListener(v -> {
+            InfoDialogFragment infoDialogFragment = new InfoDialogFragment(typeToString.get(widgetType));
+            infoDialogFragment.show(fragmentManager, "INFO_DIALOG");
         });
 
-
-        RecyclerItemAdapter adapter = new RecyclerItemAdapter(widgetItemListType, appWidgetManager, appWidgetHost , context);
+        RecyclerItemAdapter adapter = new RecyclerItemAdapter(widgetItemListType, appWidgetManager, appWidgetHost , context, listener);
 
         viewHolder.widget_item_row_recycler.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false));
         viewHolder.widget_item_row_recycler.setAdapter(adapter);

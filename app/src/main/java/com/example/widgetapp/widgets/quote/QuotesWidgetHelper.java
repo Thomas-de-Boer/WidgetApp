@@ -14,10 +14,15 @@ import java.util.Random;
 public class QuotesWidgetHelper {
     static double weight = 0.8;
     public static RemoteViews makeView(Context context) {
+
         Intent intent = new Intent(context, MainActivity.class);
+//        intent.putExtra("open_fragment", "widget_settings");
+//        intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_MUTABLE);
 
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_quotes);
+        views.setOnClickPendingIntent(R.id.quote_widget, pendingIntent);
         views.setOnClickPendingIntent(R.id.quote, pendingIntent);
 
 //        get all quotes from quotes.xml and select a random one

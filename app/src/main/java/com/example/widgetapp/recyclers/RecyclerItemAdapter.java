@@ -3,16 +3,24 @@ package com.example.widgetapp.recyclers;
 import android.appwidget.AppWidgetHost;
 import android.appwidget.AppWidgetManager;
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.widgetapp.MainActivity;
 import com.example.widgetapp.R;
+import com.example.widgetapp.WidgetSettingsListener;
+import com.example.widgetapp.fragments.ImagesSettingsFragment;
+import com.example.widgetapp.fragments.QuotesSettingsFragment;
 
+import java.util.HashMap;
 import java.util.List;
 
 public class RecyclerItemAdapter extends RecyclerView.Adapter<RecyclerItemAdapter.MyViewHolder> {
@@ -21,13 +29,15 @@ public class RecyclerItemAdapter extends RecyclerView.Adapter<RecyclerItemAdapte
     public AppWidgetManager appWidgetManager;
     public AppWidgetHost appWidgetHost;
     public Context context;
+    public WidgetSettingsListener listener;
 
     // Constructor
-    public RecyclerItemAdapter(List<WidgetItem> widgetItemList, AppWidgetManager appWidgetManager, AppWidgetHost appWidgetHost, Context context) {
+    public RecyclerItemAdapter(List<WidgetItem> widgetItemList, AppWidgetManager appWidgetManager, AppWidgetHost appWidgetHost, Context context, WidgetSettingsListener listener ) {
         this.widgetItemList = widgetItemList;
         this.appWidgetManager = appWidgetManager;
         this.appWidgetHost = appWidgetHost;
         this.context = context;
+        this.listener = listener;
     }
 
     @NonNull
@@ -61,8 +71,7 @@ public class RecyclerItemAdapter extends RecyclerView.Adapter<RecyclerItemAdapte
         viewHolder.widget_item_widget_view.removeAllViews();
         viewHolder.widget_item_widget_view.addView(view);
 
-
-//        viewHolder.widget_item_AppWidgetHostView.setAppWidget(widgetItem.get_id(), appWidgetManager.getAppWidgetInfo(widgetItem.get_id()));
+        viewHolder.widget_item_overlay.setOnClickListener(v -> listener.onWidgetSettingsRequested(widgetItem.get_type()));
     }
 
     @Override
@@ -73,12 +82,15 @@ public class RecyclerItemAdapter extends RecyclerView.Adapter<RecyclerItemAdapte
     // ViewHolder class
     public static class MyViewHolder extends RecyclerView.ViewHolder {
         FrameLayout widget_item_widget_view;
+        View widget_item_overlay;
+
 
         public MyViewHolder(@NonNull View itemView) {
 
             super(itemView);
 
             widget_item_widget_view = itemView.findViewById(R.id.widget_item_widget_view);
+            widget_item_overlay = itemView.findViewById(R.id.widget_item_overlay);
         }
     }
 }

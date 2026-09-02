@@ -20,6 +20,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.widgetapp.R;
+import com.example.widgetapp.WidgetSettingsListener;
 import com.example.widgetapp.recyclers.RecyclerRowAdapter;
 import com.example.widgetapp.recyclers.WidgetItem;
 import com.example.widgetapp.widgets.image.WidgetProviderImages;
@@ -70,7 +71,7 @@ public class WidgetFragment extends Fragment {
         appWidgetHost = new AppWidgetHost(context, 67);
         fragmentManager = requireActivity().getSupportFragmentManager();
 
-        adapter = new RecyclerRowAdapter(widgetTypeList, widgetList, appWidgetManager, appWidgetHost , context, fragmentManager);
+        adapter = new RecyclerRowAdapter(widgetTypeList, widgetList, appWidgetManager, appWidgetHost , context, fragmentManager, (WidgetSettingsListener) getActivity());
 
         text = view.findViewById(R.id.fragment_widgets_text);
         recyclerView = view.findViewById(R.id.fragment_widgets_recyclerview);
