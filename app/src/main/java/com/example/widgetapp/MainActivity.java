@@ -1,9 +1,5 @@
 package com.example.widgetapp;
 
-import android.app.FragmentManager;
-import android.content.Context;
-import android.content.Intent;
-import android.opengl.Visibility;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -11,9 +7,8 @@ import android.widget.FrameLayout;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
-import com.example.widgetapp.fragments.ImagesSettingsFragment;
 import com.example.widgetapp.fragments.InfoFragment;
-import com.example.widgetapp.fragments.QuotesSettingsFragment;
+import com.example.widgetapp.fragments.WidgetSettingsFragment;
 import com.example.widgetapp.fragments.SettingsFragment;
 import com.example.widgetapp.fragments.WidgetFragment;
 import com.example.widgetapp.recyclers.WidgetItem;
@@ -24,24 +19,7 @@ import java.util.HashMap;
 public class MainActivity extends AppCompatActivity implements WidgetSettingsListener {
 
     private FrameLayout fswFragment;
-    private HashMap<WidgetItem.widgetTypes, Fragment> typeToFragment = new HashMap<>();
-
-//    @Override
-//    protected void onNewIntent(Intent intent) {
-//        super.onNewIntent(intent);
-//        setIntent(intent);
-//        handleWidgetIntent(intent);
-//    }
-//
-//    private void handleWidgetIntent(Intent intent) {
-//        String fragmentKey = intent.getStringExtra("open_fragment");
-//        if ("widget_settings".equals(fragmentKey)) {
-//            getSupportFragmentManager().beginTransaction()
-//                    .replace(R.id.fswFragment, new QuotesSettingsFragment())
-//                    .commit();
-//            findViewById(R.id.fswFragment).setVisibility(View.VISIBLE);
-//        }
-//    }
+    private final HashMap<WidgetItem.widgetTypes, Fragment> typeToFragment = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,9 +28,6 @@ public class MainActivity extends AppCompatActivity implements WidgetSettingsLis
         setContentView(R.layout.activity_main);
 
         fswFragment = findViewById(R.id.fswFragment);
-
-        typeToFragment.put(WidgetItem.widgetTypes.QUOTES, new QuotesSettingsFragment());
-        typeToFragment.put(WidgetItem.widgetTypes.IMAGES, new ImagesSettingsFragment());
 
 //        handleWidgetIntent(getIntent());
 
@@ -79,12 +54,9 @@ public class MainActivity extends AppCompatActivity implements WidgetSettingsLis
 
 
     public void onWidgetSettingsRequested(WidgetItem.widgetTypes widgetType) {
-        Fragment fragment = typeToFragment.get(widgetType);
-        if (fragment == null) return;
-
         getSupportFragmentManager()
                 .beginTransaction()
-                .replace(R.id.fswFragment, fragment)
+                .replace(R.id.fswFragment, new WidgetSettingsFragment(widgetType, fswFragment))
                 .commit();
 
         fswFragment.setVisibility(View.VISIBLE);

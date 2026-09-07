@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
 }
 
+
 android {
     namespace = "com.example.widgetapp"
     compileSdk {
@@ -37,9 +38,13 @@ android {
 }
 
 dependencies {
+    implementation("com.google.guava:guava:33.7.1-android")
     implementation(libs.activity.ktx)
     implementation(libs.appcompat)
     implementation(libs.constraintlayout)
+    implementation(libs.preference.ktx)
+    implementation(libs.datastore.guava)
+    implementation(libs.datastore.preferences.core)
     implementation(libs.material)
     implementation(libs.recyclerview)
     testImplementation(libs.junit)

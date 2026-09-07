@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <SwitchPreferenceCompat
+        app:key="notifications"
+        app:title="Enable message notifications"/>
+
+    <EditTextPreference
+        app:key="add_quote"
+        app:title="Add a custom quote"
+        app:summary="This quote will be included in the random pool"/>
+
+    <EditTextPreference
+        app:key="add_fact"
+        app:title="Add a custom fact"
+        app:summary="This fact will be included in the random pool"/>
+
+    <SeekBarPreference
+        app:key="quote_and_fact"
+        app:title="Quote VS Fact"
+        app:summary="On the left is only quote, and on the right is only fact, in the middle gives is a random effect."
+        app:min="0"
+        android:max="100"
+        app:seekBarIncrement="1"
+        />
+
+</PreferenceScreen>
