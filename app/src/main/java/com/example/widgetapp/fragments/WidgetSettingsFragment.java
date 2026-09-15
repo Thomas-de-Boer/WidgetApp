@@ -62,6 +62,11 @@ public class WidgetSettingsFragment extends Fragment {
 
         imageView.setOnClickListener(v -> {
             fswFragment.setVisibility(View.GONE);
+
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .remove(typeToPreference.get(widgetType))
+                    .commit();
         });
     }
 }
