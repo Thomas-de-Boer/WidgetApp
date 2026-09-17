@@ -38,10 +38,12 @@ android {
 }
 
 dependencies {
+    implementation("com.google.code.gson:gson:2.14.0")
     implementation("com.google.guava:guava:33.7.1-android")
     implementation(libs.activity.ktx)
     implementation(libs.appcompat)
     implementation(libs.constraintlayout)
+    implementation(libs.firebase.crashlytics.buildtools)
     implementation(libs.preference.ktx)
     implementation(libs.datastore.guava)
     implementation(libs.datastore.preferences.core)

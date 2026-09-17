@@ -13,6 +13,7 @@ recyclerview = "1.4.0"
 datastoreGuava = "1.2.1"
 datastorePreferencesCore = "1.2.1"
 datastorePreferencesCoreJvm = "1.2.1"
+firebaseCrashlyticsBuildtools = "3.0.8"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -28,6 +29,7 @@ recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version
 datastore-guava = { group = "androidx.datastore", name = "datastore-guava", version.ref = "datastoreGuava" }
 datastore-preferences-core = { group = "androidx.datastore", name = "datastore-preferences-core", version.ref = "datastorePreferencesCore" }
 datastore-preferences-core-jvm = { group = "androidx.datastore", name = "datastore-preferences-core-jvm", version.ref = "datastorePreferencesCoreJvm" }
+firebase-crashlytics-buildtools = { group = "com.google.firebase", name = "firebase-crashlytics-buildtools", version.ref = "firebaseCrashlyticsBuildtools" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

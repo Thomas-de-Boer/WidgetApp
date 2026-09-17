@@ -1,16 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/widget_images"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/background_dark"
-    android:padding="10dp" >
+    android:layout_height="match_parent" >
 
-    <TextView
-        android:id="@+id/widget_text"
+    <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="Mooie widget... klik maar hier"
-        android:textSize="18sp"
-        android:gravity="center" />
+        android:src="@drawable/no_images_yet"
+        android:scaleType="centerCrop" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:textAlignment="center"
+        android:textSize="15sp"
+        android:text="@string/widget_images_standard" />
 
 </RelativeLayout>

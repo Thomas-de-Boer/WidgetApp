@@ -3,7 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/quote_widget"
-    android:padding="10dp">
+    android:padding="10dp"
+    android:background="@drawable/quote_background1">
 
     <TextView
         android:id="@+id/quote"
@@ -15,7 +16,8 @@
         android:textColor="@color/white"
         android:background="@color/black_opacity50"
         android:layout_centerInParent="true"
-        android:gravity="center" />
+        android:gravity="center"
+        android:text="@string/standard_quote" />
 
 
 </RelativeLayout>

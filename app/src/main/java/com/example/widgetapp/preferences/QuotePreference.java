@@ -4,8 +4,11 @@ import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.SeekBar;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.SeekBarPreference;
 
@@ -21,15 +24,28 @@ public class QuotePreference extends PreferenceFragmentCompat {
     SeekBarPreference seekBarPreference;
     AppWidgetManager widgetManager;
 
+
     @Override
     public void onCreatePreferences(@Nullable Bundle savedInstanceState, @Nullable String rootKey) {
         setPreferencesFromResource(R.xml.preferences_quotes, rootKey);
 
         seekBarPreference = findPreference("quote_and_fact");
 
-        SettingsManager.read(SettingsManager.QUOTEANDFACT, 0f, value -> {
+        widgetManager = AppWidgetManager.getInstance(getContext());
+
+        SettingsManager.read(SettingsManager.QUOTEANDFACT, 0.5f, value -> {
             assert seekBarPreference != null;
             seekBarPreference.setValue((int) (value * 100));
+        });
+
+        seekBarPreference.setOnPreferenceChangeListener((preference, newValue) -> {
+            int valueInt = (int) newValue;
+            SettingsManager.write(SettingsManager.QUOTEANDFACT, (float) valueInt / 100, f -> {
+                int[] appWidgetIds = widgetManager.getAppWidgetIds(new ComponentName(requireContext(), WidgetProviderQuotes.class));
+
+                WidgetProviderQuotes.update(getContext(), widgetManager, appWidgetIds);
+            });
+            return true;
         });
     }
 
@@ -37,13 +53,13 @@ public class QuotePreference extends PreferenceFragmentCompat {
     public void onDestroy() {
         super.onDestroy();
 
-        SettingsManager.write(SettingsManager.QUOTEANDFACT, (float) seekBarPreference.getValue() / 100);
-
-        widgetManager = AppWidgetManager.getInstance(getContext());
-
-        int[] appWidgetIds = widgetManager.getAppWidgetIds(new ComponentName(requireContext(), WidgetProviderQuotes.class));
-
-
-        WidgetProviderQuotes.update(getContext(), widgetManager, appWidgetIds);
+//        SettingsManager.write(SettingsManager.QUOTEANDFACT, (float) seekBarPreference.getValue() / 100);
+//
+//        widgetManager = AppWidgetManager.getInstance(getContext());
+//
+//        int[] appWidgetIds = widgetManager.getAppWidgetIds(new ComponentName(requireContext(), WidgetProviderQuotes.class));
+//
+//
+//        WidgetProviderQuotes.update(getContext(), widgetManager, appWidgetIds);
     }
 }

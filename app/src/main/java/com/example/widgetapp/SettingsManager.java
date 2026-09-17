@@ -1,17 +1,21 @@
 package com.example.widgetapp;
 
 import android.content.Context;
+import android.net.Uri;
 
 import androidx.datastore.guava.GuavaDataStore;
 import androidx.datastore.preferences.core.MutablePreferences;
 import androidx.datastore.preferences.core.Preferences;
 import androidx.datastore.preferences.core.PreferencesFileSerializer;
 import androidx.datastore.preferences.core.PreferencesKeys;
+import androidx.preference.Preference;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -23,6 +27,8 @@ public class SettingsManager {
 
 //    all settings fields
     public static final Preferences.Key<Float> QUOTEANDFACT = PreferencesKeys.floatKey("QUOTEANDFACT");
+//    public static final Preferences.Key<Set<String>> UPLOADEDIMAGES = PreferencesKeys.stringSetKey("UPLOADEDIMAGES");
+    public static final Preferences.Key<String> UPLOADEDIMAGES = PreferencesKeys.stringKey("UPLOADEDIMAGESSTRING");
 
 
     private SettingsManager() { }
@@ -44,12 +50,23 @@ public class SettingsManager {
     }
 
 //    write method: write the settings to disc. uses the setting field and the new value
-    public static <T> void write(Preferences.Key<T> key, T value) {
-        getDataStore().updateDataAsync(preferences -> {
+    public static <T> void write(Preferences.Key<T> key, T value, Callback<T> callback) {
+        ListenableFuture<Preferences> future = getDataStore().updateDataAsync(preferences -> {
             MutablePreferences mutablePreferences = preferences.toMutablePreferences();
             mutablePreferences.set(key, value);
             return mutablePreferences;
         });
+        Futures.addCallback(future, new FutureCallback<Preferences>() {
+            @Override
+            public void onSuccess(Preferences result) {
+                callback.onResult(value);
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                callback.onResult(null);
+            }
+        }, executor);
     }
 
 //    callback interface because read method is async
