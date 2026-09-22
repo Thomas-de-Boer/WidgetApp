@@ -1,13 +1,30 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Base.Theme.WidgetApp" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+<!--         Customize your dark theme here.-->
+<!--         <item name="colorPrimary">@color/my_dark_primary</item> -->
 
 <!--        <item name="colorPrimary">@color/colorPrimary</item>-->
 <!--        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>-->
 <!--        <item name="colorAccent">@color/colorAccent</item>-->
+            <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
     </style>
 
 <!--    <style name="Theme.Demo" parent="Base.Theme.Demo" />-->
 </resources>
+
+<!--<resources xmlns:tools="http://schemas.android.com/tools">-->
+<!--&lt;!&ndash; Base application theme. &ndash;&gt;-->
+<!--<style name="Base.Theme.WidgetApp" parent="Theme.Material3.DayNight.NoActionBar">-->
+<!--    &lt;!&ndash; Customize your light theme here. &ndash;&gt;-->
+<!--    &lt;!&ndash; <item name="colorPrimary">@color/my_light_primary</item> &ndash;&gt;-->
+<!--</style>-->
+
+<!--<style name="Theme.WidgetApp" parent="Base.Theme.WidgetApp" />-->
+<!--<style name="Theme.WidgetApp.NoActionBar">-->
+<!--    <item name="windowActionBar">false</item>-->
+<!--    <item name="windowNoTitle">true</item>-->
+<!--</style>-->
+<!--<style name="Theme.WidgetApp.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />-->
+<!--<style name="Theme.WidgetApp.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />-->
+<!--</resources>-->

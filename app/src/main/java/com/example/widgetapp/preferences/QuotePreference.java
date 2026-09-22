@@ -3,21 +3,14 @@ package com.example.widgetapp.preferences;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.os.Bundle;
-import android.util.Log;
-import android.widget.SeekBar;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.SeekBarPreference;
 
 import com.example.widgetapp.R;
 import com.example.widgetapp.SettingsManager;
-import com.example.widgetapp.widgets.quote.QuotesWidgetHelper;
 import com.example.widgetapp.widgets.quote.WidgetProviderQuotes;
-
-import java.util.Objects;
 
 public class QuotePreference extends PreferenceFragmentCompat {
 

@@ -1,14 +1,8 @@
 package com.example.widgetapp.widgets.quote;
 
-import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.Context;
-import android.content.Intent;
-import android.widget.RemoteViews;
-
-import com.example.widgetapp.MainActivity;
-import com.example.widgetapp.R;
 
 public class WidgetProviderQuotes extends AppWidgetProvider {
 
@@ -22,7 +16,7 @@ public class WidgetProviderQuotes extends AppWidgetProvider {
 
         for (int appWidgetId: appWidgetIds) {
 
-            QuotesWidgetHelper.makeView(context, views -> {
+            WidgetHelperQuotes.makeView(context, views -> {
                 appWidgetManager.updateAppWidget(appWidgetId, views);
             });
 
@@ -31,7 +25,7 @@ public class WidgetProviderQuotes extends AppWidgetProvider {
 
     public static void update(Context context, AppWidgetManager manager, int[] appWidgetIds) {
         for (int appWidgetId : appWidgetIds) {
-            QuotesWidgetHelper.makeView(context, views -> {
+            WidgetHelperQuotes.makeView(context, views -> {
                 manager.updateAppWidget(appWidgetId, views);
             });
         }

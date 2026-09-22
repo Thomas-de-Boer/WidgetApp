@@ -9,10 +9,12 @@ import android.widget.RemoteViews;
 
 import com.example.widgetapp.MainActivity;
 import com.example.widgetapp.R;
-import com.example.widgetapp.SettingsManager;
-import com.example.widgetapp.widgets.quote.QuotesWidgetHelper;
 
 public class WidgetProviderImages extends AppWidgetProvider {
+
+    public interface Callback<RemoteViews> {
+        void onResult(RemoteViews value);
+    }
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
@@ -23,25 +25,18 @@ public class WidgetProviderImages extends AppWidgetProvider {
 //        }
 
         for (int appWidgetId: appWidgetIds) {
-            Intent intent = new Intent(context, MainActivity.class);
-            PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_MUTABLE);
 
-            RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_images);
-            views.setOnClickPendingIntent(R.id.widget_images, pendingIntent);
-
-            appWidgetManager.updateAppWidget(appWidgetId, views);
+            WidgetHelperImages.makeView(context, view -> {
+                appWidgetManager.updateAppWidget(appWidgetId, view);
+            });
         }
     }
 
     public static void update(Context context, AppWidgetManager manager, int[] appWidgetIds) {
         for (int appWidgetId : appWidgetIds) {
-            Intent intent = new Intent(context, MainActivity.class);
-            PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_MUTABLE);
-
-            RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_images);
-            views.setOnClickPendingIntent(R.id.widget_images, pendingIntent);
-
-            manager.updateAppWidget(appWidgetId, views);
+            WidgetHelperImages.makeView(context, view -> {
+                manager.updateAppWidget(appWidgetId, view);
+            });
         }
     }
 }

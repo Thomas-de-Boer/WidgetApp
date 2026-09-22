@@ -17,7 +17,8 @@
         app:layout_constraintEnd_toStartOf="@id/fragment_settings_quotes_image"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/arrow_icon" />
+        app:srcCompat="@drawable/arrow_icon"
+        app:tint="?attr/colorOnSurface" />
 
     <TextView
         android:id="@+id/fragment_settings_quotes_text"

@@ -9,9 +9,9 @@
     <color name="info_icon">#007BFF</color>
 
 
-    <color name="colorPrimary">#FF1100</color>
-    <color name="colorPrimaryDark">#2b00FF</color>
-    <color name="colorAccent">#2b00FF</color>
+<!--    <color name="colorPrimary">#FF1100</color>-->
+<!--    <color name="colorPrimaryDark">#2b00FF</color>-->
+<!--    <color name="colorAccent">#2b00FF</color>-->
 
     <color name="background_dark">#2b00FF</color>
 </resources>

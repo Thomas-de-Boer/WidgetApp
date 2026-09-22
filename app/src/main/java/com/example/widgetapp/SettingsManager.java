@@ -13,7 +13,11 @@ import androidx.preference.Preference;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
+import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executor;
@@ -90,5 +94,18 @@ public class SettingsManager {
                 callback.onResult(defaultValue);
             }
         }, executor);
+    }
+
+    public static List<String> deserializeString(String string) {
+        Gson gson = new Gson();
+
+        if (string != null) {
+
+            Type listType = new TypeToken<ArrayList<String>>() {}.getType();
+            return gson.fromJson(string, listType);
+
+        } else {
+            return null;
+        }
     }
 }

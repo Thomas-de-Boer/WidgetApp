@@ -28,6 +28,7 @@ import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public class ImagePreference extends PreferenceFragmentCompat {
@@ -96,13 +97,7 @@ public class ImagePreference extends PreferenceFragmentCompat {
                 SettingsManager.read(SettingsManager.UPLOADEDIMAGES, null, string -> {
                     Gson gson = new Gson();
 
-                    if (string != null) {
-
-                        Type listType = new TypeToken<ArrayList<String>>(){}.getType();
-                        List<String> uploadedFileNamesOld = gson.fromJson(string, listType);
-
-                        uploadedFileNames.addAll(uploadedFileNamesOld);
-                    }
+                    uploadedFileNames = SettingsManager.deserializeString(string);
 
                     SettingsManager.write(SettingsManager.UPLOADEDIMAGES, gson.toJson(uploadedFileNames), s -> {
                         int[] appWidgetIds = widgetManager.getAppWidgetIds(new ComponentName(requireContext(), WidgetProviderImages.class));
