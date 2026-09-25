@@ -5,8 +5,13 @@ import static android.content.Context.MODE_PRIVATE;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.ContentResolver;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.PickVisualMediaRequest;
@@ -52,7 +57,6 @@ public class ImagePreference extends PreferenceFragmentCompat {
 
         ActivityResultLauncher<PickVisualMediaRequest> pickMultipleMedia =
             registerForActivityResult(new ActivityResultContracts.PickMultipleVisualMedia(5), uris -> {
-
                 for (Uri uri: uris) {
 
                     String uuid = UUID.randomUUID().toString();
@@ -62,23 +66,80 @@ public class ImagePreference extends PreferenceFragmentCompat {
                     try {
                         ByteArrayOutputStream buffer;
                         try (InputStream inputStream = contentResolver.openInputStream(uri); FileOutputStream fileOutputStream = requireContext().openFileOutput(fileName, MODE_PRIVATE)) {
+                            BitmapFactory.Options options = new BitmapFactory.Options();
+                            options.inJustDecodeBounds = true;
 
-                            buffer = new ByteArrayOutputStream();
+                            InputStream condenseInputStream = contentResolver.openInputStream(uri);
 
-                            int nRead;
-                            byte[] data = new byte[4096];
+                            BitmapFactory.decodeStream(condenseInputStream, null, options);
 
-                            while (true) {
-                                assert inputStream != null;
-                                if ((nRead = inputStream.read(data, 0, data.length)) == -1)
+                            int width = options.outWidth;
+                            int height = options.outHeight;
+                            int tarWidth = 1440;
+                            int tarHeight = 3200;
+
+                            int sampleSize = calculateSampleSize(height, width, tarHeight, tarWidth);
+
+                            assert condenseInputStream != null;
+                            condenseInputStream.close();
+
+                            options.inJustDecodeBounds = false;
+                            options.inSampleSize = sampleSize;
+
+                            Bitmap bitmap = BitmapFactory.decodeStream(inputStream, null, options);
+
+                            InputStream exifIS = contentResolver.openInputStream(uri);
+
+                            assert exifIS != null;
+                            ExifInterface exifInterface = new ExifInterface(exifIS);
+
+                            int orientationtag = exifInterface.getAttributeInt(
+                                    ExifInterface.TAG_ORIENTATION,
+                                    ExifInterface.ORIENTATION_NORMAL
+                            );
+
+                            int orientation = 0;
+                            switch (orientationtag) {
+                                case (ExifInterface.ORIENTATION_NORMAL):
                                     break;
-                                buffer.write(data, 0, nRead);
+                                case (ExifInterface.ORIENTATION_ROTATE_90):
+                                    orientation = 90;
+                                    break;
+                                case (ExifInterface.ORIENTATION_ROTATE_180):
+                                    orientation = 180;
+                                    break;
+                                case (ExifInterface.ORIENTATION_ROTATE_270):
+                                    orientation = 270;
+                                    break;
                             }
 
-                            buffer.flush();
-                            byte[] bytes = buffer.toByteArray();
+                            Matrix matrix = new Matrix();
+                            matrix.setRotate(orientation);
 
-                            fileOutputStream.write(bytes);
+                            assert bitmap != null;
+                            Bitmap newBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+
+                            exifIS.close();
+
+
+//                            buffer = new ByteArrayOutputStream();
+//
+//                            int nRead;
+//                            byte[] data = new byte[4096];
+//
+//                            while (true) {
+//                                assert inputStream != null;
+//                                if ((nRead = inputStream.read(data, 0, data.length)) == -1)
+//                                    break;
+//                                buffer.write(data, 0, nRead);
+//                            }
+//
+//                            buffer.flush();
+//                            byte[] bytes = buffer.toByteArray();
+
+                            newBitmap.compress(Bitmap.CompressFormat.JPEG, 80, fileOutputStream);
+
+//                            fileOutputStream.write(bytes);
 
                             uploadedFileNames.add(fileName);
                         }
@@ -94,10 +155,14 @@ public class ImagePreference extends PreferenceFragmentCompat {
 //                    SettingsManager.write(SettingsManager.UPLOADEDIMAGES, uploadedFileNamesSet);
 //                });
 
+
                 SettingsManager.read(SettingsManager.UPLOADEDIMAGES, null, string -> {
                     Gson gson = new Gson();
 
-                    uploadedFileNames = SettingsManager.deserializeString(string);
+                    uploadedFileNames.addAll(SettingsManager.deserializeString(string));
+
+                    Log.d("ImagePreference", "writing = " + gson.toJson(uploadedFileNames));
+
 
                     SettingsManager.write(SettingsManager.UPLOADEDIMAGES, gson.toJson(uploadedFileNames), s -> {
                         int[] appWidgetIds = widgetManager.getAppWidgetIds(new ComponentName(requireContext(), WidgetProviderImages.class));
@@ -128,5 +193,15 @@ public class ImagePreference extends PreferenceFragmentCompat {
 //        int[] appWidgetIds = widgetManager.getAppWidgetIds(new ComponentName(requireContext(), WidgetProviderImages.class));
 //
 //        WidgetProviderImages.update(getContext(), widgetManager, appWidgetIds);
+    }
+
+    public int calculateSampleSize(int currHeight, int currWidth, int tarHeight, int tarWidth) {
+        int sampleSize = 1;
+
+        while (currHeight / sampleSize >= tarHeight || currWidth / sampleSize >= tarWidth) {
+            sampleSize *= 2;
+        }
+
+        return sampleSize;
     }
 }

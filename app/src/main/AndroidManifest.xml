@@ -24,6 +24,12 @@
             </intent-filter>
         </activity>
 
+        <service
+            android:name=".widgets.image.ImageWidgetService"
+            android:permission="android.permission.BIND_REMOTEVIEWS">
+
+        </service>
+
         <receiver android:name=".widgets.image.WidgetProviderImages" android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />

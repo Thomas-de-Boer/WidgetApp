@@ -5,18 +5,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
-    <ImageView
+    <AdapterViewFlipper
+        android:id="@+id/widget_images_flipper"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:src="@drawable/no_images_yet"
-        android:scaleType="centerCrop" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:textAlignment="center"
-        android:textSize="15sp"
-        android:text="@string/widget_images_standard" />
+        android:flipInterval="2500"
+        android:autoStart="true" />
 
 </RelativeLayout>

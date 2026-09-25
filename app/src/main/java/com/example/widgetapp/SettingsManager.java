@@ -16,10 +16,12 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import java.io.FileNotFoundException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -96,6 +98,18 @@ public class SettingsManager {
         }, executor);
     }
 
+    public static String readsyncImages() {
+        ListenableFuture<Preferences> future = getDataStore().getDataAsync();
+        Preferences preferences;
+        try {
+            preferences = future.get();
+        } catch (ExecutionException | InterruptedException e) {
+            return null;
+        }
+
+        return preferences.get(UPLOADEDIMAGES);
+    }
+
     public static List<String> deserializeString(String string) {
         Gson gson = new Gson();
 
@@ -105,7 +119,7 @@ public class SettingsManager {
             return gson.fromJson(string, listType);
 
         } else {
-            return null;
+            return new ArrayList<>();
         }
     }
 }

@@ -19,10 +19,6 @@ public class WidgetProviderImages extends AppWidgetProvider {
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
         super.onUpdate(context, appWidgetManager, appWidgetIds);
-//
-//        SettingsManager.read(SettingsManager.QUOTEANDFACT, 0.5f, value -> {
-//
-//        }
 
         for (int appWidgetId: appWidgetIds) {
 
