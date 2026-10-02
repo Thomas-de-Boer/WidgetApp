@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string-array name="fun_facts">
         <item>Life isn’t about getting and having, it’s about giving and being.</item>
         <item>Whatever the mind of man can conceive and believe, it can achieve.</item>
