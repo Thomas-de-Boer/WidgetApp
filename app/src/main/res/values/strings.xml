@@ -16,9 +16,11 @@
 
     <string name="image_widget_name">Image Widget</string>
     <string name="widget_images_standard">You haven’t uploaded any images yet,\n you should do so.</string>
+    <string name="image_widget_description">Upload your own images and view them on your homescreen</string>
 
     <string name="done">continue</string>
-    <string name="info_quotes">cool info</string>
-    <string name="info_images">cool info</string>
+    <string name="info_quotes">Show a fresh quote or fun fact on your home screen. The widget refreshes itself, so something new comes by regularly. In the settings you choose which types of quotes you want to see.</string>
+    <string name="info_images">Show your own photos on your home screen. Upload photos in the app and the widget cycles through them every so often. You get something new to look at instead of a fixed icon. Your photos stay on your own phone, no account or server needed.</string>
+    <string name="delete">Delete</string>
 
 </resources>

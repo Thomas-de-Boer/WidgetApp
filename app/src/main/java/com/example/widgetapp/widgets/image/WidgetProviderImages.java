@@ -22,16 +22,21 @@ public class WidgetProviderImages extends AppWidgetProvider {
 
         for (int appWidgetId: appWidgetIds) {
 
+            appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.widget_images_flipper);
+
             WidgetHelperImages.makeView(context, view -> {
                 appWidgetManager.updateAppWidget(appWidgetId, view);
             });
         }
     }
 
-    public static void update(Context context, AppWidgetManager manager, int[] appWidgetIds) {
+    public static void update(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
         for (int appWidgetId : appWidgetIds) {
+
+            appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.widget_images_flipper);
+
             WidgetHelperImages.makeView(context, view -> {
-                manager.updateAppWidget(appWidgetId, view);
+                appWidgetManager.updateAppWidget(appWidgetId, view);
             });
         }
     }

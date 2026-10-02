@@ -5,4 +5,7 @@
     android:updatePeriodMillis="86400000"
     android:initialLayout="@layout/widget_images"
     android:resizeMode="vertical|horizontal"
-    android:widgetCategory="home_screen" />
+    android:widgetCategory="home_screen"
+    android:previewLayout="@layout/flipper_item"
+    android:description="@string/image_widget_description"
+    />

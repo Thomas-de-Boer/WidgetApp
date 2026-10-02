@@ -30,7 +30,7 @@
 
         </service>
 
-        <receiver android:name=".widgets.image.WidgetProviderImages" android:exported="true">
+        <receiver android:name=".widgets.image.WidgetProviderImages" android:exported="true" android:label="@string/image_widget_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>

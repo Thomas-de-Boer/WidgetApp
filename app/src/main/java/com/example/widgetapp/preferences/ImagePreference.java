@@ -16,6 +16,7 @@ import android.util.Log;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.PickVisualMediaRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
@@ -39,6 +40,7 @@ import java.util.UUID;
 public class ImagePreference extends PreferenceFragmentCompat {
 
     Preference uploadImage;
+    ImageListPreference uploadedImage;
     AppWidgetManager widgetManager;
 
     ContentResolver contentResolver;
@@ -49,22 +51,28 @@ public class ImagePreference extends PreferenceFragmentCompat {
     public void onCreatePreferences(@Nullable Bundle savedInstanceState, @Nullable String rootKey) {
         setPreferencesFromResource(R.xml.preferences_images, rootKey);
 
-        contentResolver = requireContext().getContentResolver();
+        uploadImage = findPreference("upload_image");
+        uploadedImage = findPreference("uploaded_images");
 
-        uploadedFileNames = new ArrayList<>();
-
-        widgetManager = AppWidgetManager.getInstance(getContext());
 
         ActivityResultLauncher<PickVisualMediaRequest> pickMultipleMedia =
             registerForActivityResult(new ActivityResultContracts.PickMultipleVisualMedia(5), uris -> {
+
+                contentResolver = requireContext().getContentResolver();
+
+                uploadedFileNames = new ArrayList<>();
+
+                widgetManager = AppWidgetManager.getInstance(getContext());
+
                 for (Uri uri: uris) {
+
+
 
                     String uuid = UUID.randomUUID().toString();
 
                     String fileName = "UploadedImages" + uuid;
 
                     try {
-                        ByteArrayOutputStream buffer;
                         try (InputStream inputStream = contentResolver.openInputStream(uri); FileOutputStream fileOutputStream = requireContext().openFileOutput(fileName, MODE_PRIVATE)) {
                             BitmapFactory.Options options = new BitmapFactory.Options();
                             options.inJustDecodeBounds = true;
@@ -90,31 +98,7 @@ public class ImagePreference extends PreferenceFragmentCompat {
 
                             InputStream exifIS = contentResolver.openInputStream(uri);
 
-                            assert exifIS != null;
-                            ExifInterface exifInterface = new ExifInterface(exifIS);
-
-                            int orientationtag = exifInterface.getAttributeInt(
-                                    ExifInterface.TAG_ORIENTATION,
-                                    ExifInterface.ORIENTATION_NORMAL
-                            );
-
-                            int orientation = 0;
-                            switch (orientationtag) {
-                                case (ExifInterface.ORIENTATION_NORMAL):
-                                    break;
-                                case (ExifInterface.ORIENTATION_ROTATE_90):
-                                    orientation = 90;
-                                    break;
-                                case (ExifInterface.ORIENTATION_ROTATE_180):
-                                    orientation = 180;
-                                    break;
-                                case (ExifInterface.ORIENTATION_ROTATE_270):
-                                    orientation = 270;
-                                    break;
-                            }
-
-                            Matrix matrix = new Matrix();
-                            matrix.setRotate(orientation);
+                            Matrix matrix = getMatrix(exifIS);
 
                             assert bitmap != null;
                             Bitmap newBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
@@ -161,7 +145,6 @@ public class ImagePreference extends PreferenceFragmentCompat {
 
                     uploadedFileNames.addAll(SettingsManager.deserializeString(string));
 
-                    Log.d("ImagePreference", "writing = " + gson.toJson(uploadedFileNames));
 
 
                     SettingsManager.write(SettingsManager.UPLOADEDIMAGES, gson.toJson(uploadedFileNames), s -> {
@@ -171,9 +154,9 @@ public class ImagePreference extends PreferenceFragmentCompat {
                     });
                 });
 
-            });
+                uploadedImage.notifyChange();
 
-        uploadImage = findPreference("upload_image");
+            });
 
         assert uploadImage != null;
         uploadImage.setOnPreferenceClickListener(preference -> {
@@ -181,6 +164,37 @@ public class ImagePreference extends PreferenceFragmentCompat {
             return false;
         });
 
+
+    }
+
+    @NonNull
+    private static Matrix getMatrix(InputStream exifIS) throws IOException {
+        assert exifIS != null;
+        ExifInterface exifInterface = new ExifInterface(exifIS);
+
+        int orientationtag = exifInterface.getAttributeInt(
+                ExifInterface.TAG_ORIENTATION,
+                ExifInterface.ORIENTATION_NORMAL
+        );
+
+        int orientation = 0;
+        switch (orientationtag) {
+            case (ExifInterface.ORIENTATION_NORMAL):
+                break;
+            case (ExifInterface.ORIENTATION_ROTATE_90):
+                orientation = 90;
+                break;
+            case (ExifInterface.ORIENTATION_ROTATE_180):
+                orientation = 180;
+                break;
+            case (ExifInterface.ORIENTATION_ROTATE_270):
+                orientation = 270;
+                break;
+        }
+
+        Matrix matrix = new Matrix();
+        matrix.setRotate(orientation);
+        return matrix;
     }
 
 

@@ -8,4 +8,9 @@
         app:summary="Uploaded images wil appear in the image widget"
         />
 
+    <com.example.widgetapp.preferences.ImageListPreference
+        app:key="uploaded_images"
+        app:title="Uploaded images"
+        />
+
 </PreferenceScreen>

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.provider.Settings;
+import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
 
@@ -12,12 +13,11 @@ import com.example.widgetapp.SettingsManager;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.List;
 
 public class ImageWidgetFactory implements RemoteViewsService.RemoteViewsFactory {
     Context context;
-    List<Bitmap> images;
     List<String> uploadedFileNames;
 
     public ImageWidgetFactory(Context context) {
@@ -50,6 +50,12 @@ public class ImageWidgetFactory implements RemoteViewsService.RemoteViewsFactory
         if (uploadedFileNames.isEmpty())
             return views;
 
+        try {
+            String temp = uploadedFileNames.get(position);
+        } catch (Exception e) {
+            return views;
+        }
+
         FileInputStream fileInputStream;
         try {
             fileInputStream = context.openFileInput(uploadedFileNames.get(position));
@@ -58,6 +64,11 @@ public class ImageWidgetFactory implements RemoteViewsService.RemoteViewsFactory
         }
 
         Bitmap bitmap = BitmapFactory.decodeStream(fileInputStream);
+        try {
+            fileInputStream.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         views.setImageViewBitmap(R.id.flipper_item_image, bitmap);
         views.setTextViewText(R.id.flipper_item_text, "");
@@ -78,9 +89,6 @@ public class ImageWidgetFactory implements RemoteViewsService.RemoteViewsFactory
     @Override
     public void onCreate() {
         uploadedFileNames = SettingsManager.deserializeString(SettingsManager.readsyncImages());
-//        SettingsManager.read(SettingsManager.UPLOADEDIMAGES, null, string -> {
-//            uploadedFileNames = SettingsManager.deserializeString(string);
-//        });
     }
 
     @Override
@@ -89,6 +97,7 @@ public class ImageWidgetFactory implements RemoteViewsService.RemoteViewsFactory
 //        SettingsManager.read(SettingsManager.UPLOADEDIMAGES, null, string -> {
 //            uploadedFileNames = SettingsManager.deserializeString(string);
 //        });
+
     }
 
     @Override

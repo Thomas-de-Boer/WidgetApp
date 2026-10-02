@@ -14,7 +14,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.widgetapp.InfoDialogFragment;
+import com.example.widgetapp.fragments.InfoDialogFragment;
 import com.example.widgetapp.R;
 import com.example.widgetapp.WidgetSettingsListener;
 
