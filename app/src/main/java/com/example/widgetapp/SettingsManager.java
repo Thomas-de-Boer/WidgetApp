@@ -122,4 +122,12 @@ public class SettingsManager {
             return new ArrayList<>();
         }
     }
+
+    public static <T> void resetData(Preferences.Key<T> key) {
+        getDataStore().updateDataAsync(preferences -> {
+            MutablePreferences mutablePreferences = preferences.toMutablePreferences();
+            mutablePreferences.set(key, null);
+            return mutablePreferences;
+        });
+    }
 }

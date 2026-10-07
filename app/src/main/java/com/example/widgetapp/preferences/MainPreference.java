@@ -10,6 +10,7 @@ import androidx.preference.PreferenceFragmentCompat;
 
 import com.example.widgetapp.MainActivity;
 import com.example.widgetapp.R;
+import com.example.widgetapp.SettingsManager;
 
 import java.util.Objects;
 
@@ -18,10 +19,11 @@ public class MainPreference extends PreferenceFragmentCompat {
     public void onCreatePreferences(@Nullable Bundle savedInstanceState, @Nullable String rootKey) {
         setPreferencesFromResource(R.xml.main_preference, rootKey);
 
-        Preference preference = findPreference("light_dark");
+        Preference lightDark = findPreference("light_dark");
+        Preference reset = findPreference("reset_data");
 
-        assert preference != null;
-        preference.setOnPreferenceClickListener(preference1 -> {
+        assert lightDark != null;
+        lightDark.setOnPreferenceClickListener(preference -> {
 
             int nightModeFlags = requireContext().getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
             switch (nightModeFlags) {
@@ -34,6 +36,15 @@ public class MainPreference extends PreferenceFragmentCompat {
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
                     break;
             }
+            return false;
+        });
+
+        assert reset != null;
+        reset.setOnPreferenceClickListener(preference -> {
+
+            SettingsManager.resetData(SettingsManager.QUOTEANDFACT);
+            SettingsManager.resetData(SettingsManager.UPLOADEDIMAGES);
+
             return false;
         });
     }
