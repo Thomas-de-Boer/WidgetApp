@@ -2,16 +2,6 @@
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <EditTextPreference
-        app:key="add_quote"
-        app:title="Add a custom quote"
-        app:summary="This quote will be included in the random pool"/>
-
-    <EditTextPreference
-        app:key="add_fact"
-        app:title="Add a custom fact"
-        app:summary="This fact will be included in the random pool"/>
-
     <SeekBarPreference
         app:key="quote_and_fact"
         app:title="Quote VS Fact"

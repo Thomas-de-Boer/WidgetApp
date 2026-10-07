@@ -37,7 +37,10 @@ public class MainActivity extends AppCompatActivity implements WidgetSettingsLis
         Fragment settingsFragment = new SettingsFragment();
         Fragment infoFragment = new InfoFragment();
 
-        setCurrentFragment(widgetFragment);
+        if (savedInstanceState == null) {
+            setCurrentFragment(widgetFragment);
+
+        }
 
         bottomNavigationView.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
