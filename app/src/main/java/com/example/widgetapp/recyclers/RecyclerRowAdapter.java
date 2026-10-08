@@ -3,6 +3,7 @@ package com.example.widgetapp.recyclers;
 import android.appwidget.AppWidgetHost;
 import android.appwidget.AppWidgetManager;
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -48,6 +49,7 @@ public class RecyclerRowAdapter extends RecyclerView.Adapter<RecyclerRowAdapter.
 
         typeToString.put(WidgetItem.widgetTypes.QUOTES, R.string.info_quotes);
         typeToString.put(WidgetItem.widgetTypes.IMAGES, R.string.info_images);
+        typeToString.put(WidgetItem.widgetTypes.GEN, R.string.info_gen);
     }
 
     @NonNull
@@ -67,6 +69,11 @@ public class RecyclerRowAdapter extends RecyclerView.Adapter<RecyclerRowAdapter.
         }
         else if (widgetType == WidgetItem.widgetTypes.IMAGES) {
             viewHolder.widget_item_row_text.setText(R.string.image_widget_name);
+            Log.d("TAG", "onBindViewHolder: hallo hij doet niet");
+        }
+        else if (widgetType == WidgetItem.widgetTypes.GEN) {
+            viewHolder.widget_item_row_text.setText(R.string.gen_widget_name);
+            Log.d("TAG", "onBindViewHolder: hallo hij doet");
         }
 
 

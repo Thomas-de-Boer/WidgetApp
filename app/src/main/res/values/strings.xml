@@ -24,6 +24,7 @@
     <string name="done">continue</string>
     <string name="info_quotes">Show a fresh quote or fun fact on your home screen. The widget refreshes itself, so something new comes by regularly. In the settings you choose which types of quotes you want to see.</string>
     <string name="info_images">Show your own photos on your home screen. Upload photos in the app and the widget cycles through them every so often. You get something new to look at instead of a fixed icon. Your photos stay on your own phone, no account or server needed.</string>
+    <string name="info_gen">Toont plaatjes die door een algoritme worden gemaakt. Elke keer dat de widget vernieuwt, zie je iets nieuws dat nog nooit eerder is gemaakt. In de instellingen kun je bepalen hoe de plaatjes eruitzien.</string>
     <string name="delete">Delete</string>
 
 </resources>

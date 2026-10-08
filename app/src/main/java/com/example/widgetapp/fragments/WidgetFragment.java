@@ -23,6 +23,7 @@ import com.example.widgetapp.R;
 import com.example.widgetapp.WidgetSettingsListener;
 import com.example.widgetapp.recyclers.RecyclerRowAdapter;
 import com.example.widgetapp.recyclers.WidgetItem;
+import com.example.widgetapp.widgets.gen.WidgetProviderGen;
 import com.example.widgetapp.widgets.image.WidgetProviderImages;
 import com.example.widgetapp.widgets.quote.WidgetProviderQuotes;
 
@@ -47,6 +48,7 @@ public class WidgetFragment extends Fragment {
     public WidgetFragment() {
         classAndEnums.put(WidgetProviderQuotes.class, WidgetItem.widgetTypes.QUOTES);
         classAndEnums.put(WidgetProviderImages.class, WidgetItem.widgetTypes.IMAGES);
+        classAndEnums.put(WidgetProviderGen.class, WidgetItem.widgetTypes.GEN);
     }
 
 
@@ -71,8 +73,6 @@ public class WidgetFragment extends Fragment {
         appWidgetHost = new AppWidgetHost(context, 67);
         fragmentManager = requireActivity().getSupportFragmentManager();
 
-        adapter = new RecyclerRowAdapter(widgetTypeList, widgetList, appWidgetManager, appWidgetHost , context, fragmentManager, (WidgetSettingsListener) getActivity());
-
         text = view.findViewById(R.id.fragment_widgets_text);
         recyclerView = view.findViewById(R.id.fragment_widgets_recyclerview);
 
@@ -82,6 +82,8 @@ public class WidgetFragment extends Fragment {
 //        fill lists with WidgetItems and widgetTypes
         widgetList = buildWidgetList();
         widgetTypeList = buildWidgetTypeList(widgetList);
+
+        adapter = new RecyclerRowAdapter(widgetTypeList, widgetList, appWidgetManager, appWidgetHost , context, fragmentManager, (WidgetSettingsListener) getActivity());
 
 //        activate the recyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(context));

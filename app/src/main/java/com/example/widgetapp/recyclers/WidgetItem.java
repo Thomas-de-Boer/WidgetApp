@@ -4,6 +4,7 @@ public class WidgetItem {
     public enum widgetTypes {
         QUOTES,
         IMAGES,
+        GEN
     }
     int widgetId;
     public widgetTypes widgetType;
