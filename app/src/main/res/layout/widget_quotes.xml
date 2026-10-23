@@ -3,15 +3,25 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/quote_widget"
-    android:padding="10dp"
     android:background="@drawable/quote_background1">
+
+    <ImageView
+        android:id="@+id/quote_noise_background"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:scaleType="centerCrop"
+        android:visibility="gone" />
 
     <TextView
         android:id="@+id/quote"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:maxWidth="330dp"
-        android:padding="5dp"
+        android:padding="15dp"
         android:textSize="18sp"
         android:textColor="@color/white"
         android:background="@color/black_opacity50"

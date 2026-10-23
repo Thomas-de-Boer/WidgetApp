@@ -3,70 +3,106 @@ package com.example.widgetapp.widgets.quote;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.widget.RemoteViews;
 
 import com.example.widgetapp.MainActivity;
 import com.example.widgetapp.R;
 import com.example.widgetapp.SettingsManager;
+import com.example.widgetapp.widgets.gen.GeneratedImageStore;
+import com.google.gson.Gson;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 public class WidgetHelperQuotes {
-    static float weight;
+    private static final Gson GSON = new Gson();
+    private static final Random RANDOM = new Random();
 
     public static void makeView(Context context, WidgetProviderQuotes.Callback<RemoteViews> callback) {
-
-        SettingsManager.read(SettingsManager.QUOTEANDFACT, 0.5f, value -> {
-            weight = value;
-
-            Intent intent = new Intent(context, MainActivity.class);
-
-            PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_MUTABLE);
-
-            RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_quotes);
-            views.setOnClickPendingIntent(R.id.quote_widget, pendingIntent);
-            views.setOnClickPendingIntent(R.id.quote, pendingIntent);
-
-//        get all quotes from quotes.xml and select a random one
-            String[] quotes = context.getResources().getStringArray(R.array.quotes);
-            String randomQuote = quotes[new Random().nextInt(quotes.length)];
-
-//        get all facts from quotes.xml and select a random one
-            String[] facts = context.getResources().getStringArray(R.array.fun_facts);
-            String randomFact = facts[new Random().nextInt(facts.length)];
-
-
-//        get all images and select a random one
-            int[] images = {R.drawable.quote_background1, R.drawable.quote_background2, R.drawable.quote_background3, R.drawable.quote_background4, R.drawable.quote_background5, R.drawable.quote_background6, R.drawable.quote_background7, R.drawable.quote_background8};
-            int randomImage = images[new Random().nextInt(images.length)];
-
-//        choose and set the chosen text in the text element
-            String chosenText = chooseQuoteOrFact(randomQuote, randomFact, weight);
-            views.setTextViewText(R.id.quote, chosenText);
-
-//        set random background image if it's a quote and set custom background if fact
-            if (Arrays.asList(quotes).contains(chosenText)) { views.setInt(R.id.quote_widget, "setBackgroundResource", randomImage); }
-            else { views.setInt(R.id.quote_widget, "setBackgroundResource", R.color.background_dark); }
-
-            callback.onResult(views);
+        SettingsManager.read(SettingsManager.QUOTEANDFACT, 0.5f, weight -> {
+            SettingsManager.read(SettingsManager.QUOTE_AVOID_REPEATS, false, avoidRepeats -> {
+                SettingsManager.read(SettingsManager.QUOTE_HISTORY, "[]", quoteHistoryJson -> {
+                    SettingsManager.read(SettingsManager.FACT_HISTORY, "[]", factHistoryJson -> {
+                        makeViewWithContent(context, callback, weight, avoidRepeats,
+                                SettingsManager.deserializeString(quoteHistoryJson),
+                                SettingsManager.deserializeString(factHistoryJson));
+                    });
+                });
+            });
         });
     }
 
-    public static String chooseQuoteOrFact(String randomQuote, String randomFact, float weight) {
-//        choose a fact or a quote based on the weight. if weight is 0 it's a quote, if weight is 1 it's a fact
-//        if weight is in between it wil be chosen randomly with the weight
-//        for example: weight is 0.8 there is an 80% chance for a fact and a 20% chance for a quote
-        String chosenText;
+    private static void makeViewWithContent(Context context, WidgetProviderQuotes.Callback<RemoteViews> callback,
+                                             float weight, boolean avoidRepeats, List<String> quoteHistory,
+                                             List<String> factHistory) {
+        String[] quotes = context.getResources().getStringArray(R.array.quotes);
+        String[] facts = context.getResources().getStringArray(R.array.fun_facts);
+        boolean fact = weight >= 1f || (weight > 0f && RANDOM.nextFloat() <= weight);
+        String[] source = fact ? facts : quotes;
+        List<String> history = fact ? factHistory : quoteHistory;
+        String chosenText = chooseItem(source, history, avoidRepeats);
 
-        double randomNum = Math.random();
+        if (avoidRepeats) {
+            history.add(chosenText);
+            SettingsManager.write(
+                    fact ? SettingsManager.FACT_HISTORY : SettingsManager.QUOTE_HISTORY,
+                    GSON.toJson(history),
+                    ignored -> applyView(context, callback, chosenText, fact)
+            );
+        } else {
+            applyView(context, callback, chosenText, fact);
+        }
+    }
 
-        if (weight == 0) { chosenText = randomQuote; }
-        else if (weight == 1) { chosenText = randomFact; }
-        else if (randomNum <= weight) { chosenText = randomFact; }
-        else if (randomNum > weight) { chosenText = randomQuote; }
-        else { chosenText = randomFact; }
+    private static String chooseItem(String[] source, List<String> history, boolean avoidRepeats) {
+        List<String> candidates = new ArrayList<>(Arrays.asList(source));
+        if (avoidRepeats) {
+            candidates.removeAll(history);
+            if (candidates.isEmpty()) {
+                history.clear();
+                candidates.addAll(Arrays.asList(source));
+            }
+        }
+        return candidates.get(RANDOM.nextInt(candidates.size()));
+    }
 
-        return chosenText;
+    private static void applyView(Context context, WidgetProviderQuotes.Callback<RemoteViews> callback,
+                                  String chosenText, boolean fact) {
+        Intent intent = new Intent(context, MainActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                context, 0, intent, PendingIntent.FLAG_MUTABLE
+        );
+        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_quotes);
+        views.setOnClickPendingIntent(R.id.quote_widget, pendingIntent);
+        views.setOnClickPendingIntent(R.id.quote, pendingIntent);
+        views.setTextViewText(R.id.quote, chosenText);
+
+        if (fact) {
+            int algorithm = RANDOM.nextInt(7);
+            int palette = RANDOM.nextInt(9);
+            GeneratedImageStore.generateSingleBackground(
+                    context, palette, algorithm, RANDOM.nextLong(), bitmap -> {
+                        if (bitmap != null) {
+                            views.setImageViewBitmap(R.id.quote_noise_background, bitmap);
+                            views.setViewVisibility(R.id.quote_noise_background, android.view.View.VISIBLE);
+                        }
+                        callback.onResult(views);
+                    }
+            );
+            return;
+        }
+
+        int[] images = {
+                R.drawable.quote_background1, R.drawable.quote_background2,
+                R.drawable.quote_background3, R.drawable.quote_background4,
+                R.drawable.quote_background5, R.drawable.quote_background6,
+                R.drawable.quote_background7, R.drawable.quote_background8
+        };
+        views.setViewVisibility(R.id.quote_noise_background, android.view.View.GONE);
+        views.setInt(R.id.quote_widget, "setBackgroundResource", images[RANDOM.nextInt(images.length)]);
+        callback.onResult(views);
     }
 }

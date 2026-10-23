@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.widget.AdapterViewFlipper;
 import android.widget.RemoteViews;
 
 import com.example.widgetapp.MainActivity;
@@ -20,8 +19,6 @@ public class WidgetHelperImages {
 
     public static void makeView(Context context, WidgetProviderImages.Callback<RemoteViews> callback) {
         SettingsManager.read(SettingsManager.UPLOADEDIMAGES, null, string -> {
-
-            AdapterViewFlipper adapterViewFlipper;
 
 //            List<String> uploadedFileNames = SettingsManager.deserializeString(string);
 
@@ -49,15 +46,10 @@ public class WidgetHelperImages {
 
             RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_images);
             views.setOnClickPendingIntent(R.id.widget_images, pendingIntent);
-
-
             Intent factoryIntent = new Intent(context, ImageWidgetService.class);
             factoryIntent.setData(Uri.parse(factoryIntent.toUri(Intent.URI_INTENT_SCHEME)));
             views.setRemoteAdapter(R.id.widget_images_flipper, factoryIntent);
             views.setEmptyView(R.id.widget_images_flipper, R.id.widget_images_empty);
-
-
-//            views.setImageViewBitmap(R.id.flipper_item_image, bitmap);
 
             callback.onResult(views);
         });

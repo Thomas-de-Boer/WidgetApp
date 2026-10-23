@@ -52,6 +52,9 @@ public class MainPreference extends PreferenceFragmentCompat {
             SettingsManager.resetData(SettingsManager.GENERATED_SPEED);
             SettingsManager.resetData(SettingsManager.GENERATED_DURATION);
             SettingsManager.resetData(SettingsManager.GENERATED_SEED);
+            SettingsManager.resetData(SettingsManager.QUOTE_AVOID_REPEATS);
+            SettingsManager.resetData(SettingsManager.QUOTE_HISTORY);
+            SettingsManager.resetData(SettingsManager.FACT_HISTORY);
             GeneratedImageStore.deleteAll(requireContext());
 
             return false;

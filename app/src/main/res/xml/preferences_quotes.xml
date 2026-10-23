@@ -11,4 +11,10 @@
         app:seekBarIncrement="1"
         />
 
+    <SwitchPreferenceCompat
+        app:key="quote_avoid_repeats"
+        app:title="Avoid repeats"
+        app:summary="Show each quote or fact again only after the available items have been used"
+        app:defaultValue="false" />
+
 </PreferenceScreen>

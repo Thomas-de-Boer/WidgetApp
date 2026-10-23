@@ -53,7 +53,7 @@ public class ImagePreference extends PreferenceFragmentCompat {
 
         uploadImage = findPreference("upload_image");
         uploadedImage = findPreference("uploaded_images");
-
+        widgetManager = AppWidgetManager.getInstance(requireContext());
 
         ActivityResultLauncher<PickVisualMediaRequest> pickMultipleMedia =
             registerForActivityResult(new ActivityResultContracts.PickMultipleVisualMedia(5), uris -> {

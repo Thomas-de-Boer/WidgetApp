@@ -36,6 +36,16 @@ public final class GeneratedImageStore {
         ));
     }
 
+    public static void generateSingleBackground(Context context, int palette, int algorithm, long seed,
+                                                SettingsManager.Callback<Bitmap> callback) {
+        GENERATION_EXECUTOR.execute(() -> {
+            Random random = new Random(seed);
+            float[][] noise = createNoise(5f, 4, algorithm, seed,
+                    random.nextFloat() * 10000f, random.nextFloat() * 10000f, 0f);
+            callback.onResult(render(noise, palette));
+        });
+    }
+
     private static void generateInternal(Context context, float scale, int octaves, int palette, int algorithm,
                                          int speed, long seed, List<String> oldFiles,
                                          SettingsManager.Callback<List<String>> callback) {
@@ -98,17 +108,6 @@ public final class GeneratedImageStore {
             deleteFilesExcept(context, generated);
             callback.onResult(generated);
         });
-    }
-
-    public static List<String> readFiles() {
-        String value = SettingsManager.readsyncGeneratedImages();
-        if (value == null) {
-            return new ArrayList<>();
-        }
-
-        Type type = new TypeToken<ArrayList<String>>() { }.getType();
-        List<String> files = GSON.fromJson(value, type);
-        return files == null ? new ArrayList<>() : files;
     }
 
     public static void deleteAll(Context context) {

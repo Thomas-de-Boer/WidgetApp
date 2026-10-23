@@ -43,6 +43,9 @@ public class SettingsManager {
     public static final Preferences.Key<Integer> GENERATED_DURATION = PreferencesKeys.intKey("GENERATED_DURATION");
     public static final Preferences.Key<Long> GENERATED_SEED = PreferencesKeys.longKey("GENERATED_SEED");
     public static final Preferences.Key<String> GENERATED_IMAGES = PreferencesKeys.stringKey("GENERATED_IMAGES");
+    public static final Preferences.Key<Boolean> QUOTE_AVOID_REPEATS = PreferencesKeys.booleanKey("QUOTE_AVOID_REPEATS");
+    public static final Preferences.Key<String> QUOTE_HISTORY = PreferencesKeys.stringKey("QUOTE_HISTORY");
+    public static final Preferences.Key<String> FACT_HISTORY = PreferencesKeys.stringKey("FACT_HISTORY");
 
 
     private SettingsManager() { }
