@@ -13,6 +13,7 @@ import androidx.fragment.app.Fragment;
 import androidx.preference.PreferenceFragmentCompat;
 
 import com.example.widgetapp.R;
+import com.example.widgetapp.preferences.GenPreference;
 import com.example.widgetapp.preferences.ImagePreference;
 import com.example.widgetapp.preferences.QuotePreference;
 import com.example.widgetapp.recyclers.WidgetItem;
@@ -34,6 +35,7 @@ public class WidgetSettingsFragment extends Fragment {
 
         typeToPreference.put(WidgetItem.widgetTypes.QUOTES, new QuotePreference());
         typeToPreference.put(WidgetItem.widgetTypes.IMAGES, new ImagePreference());
+        typeToPreference.put(WidgetItem.widgetTypes.GEN, new GenPreference());
     }
 
     @Nullable
