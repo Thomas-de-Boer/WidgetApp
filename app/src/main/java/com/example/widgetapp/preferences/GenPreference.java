@@ -67,8 +67,7 @@ public class GenPreference extends PreferenceFragmentCompat {
         }
         if (resetGenerated != null) {
             resetGenerated.setOnPreferenceClickListener(preference -> {
-                GeneratedImageStore.deleteAll(requireContext());
-                refreshWidgets();
+                GeneratedImageStore.reset(requireContext(), this::refreshWidgets);
                 return true;
             });
         }

@@ -124,6 +124,21 @@ public final class GeneratedImageStore {
         SettingsManager.resetData(SettingsManager.GENERATED_IMAGES);
     }
 
+    public static void reset(Context context, Runnable callback) {
+        GENERATION_EXECUTOR.execute(() -> {
+            File directory = new File(context.getFilesDir(), "generated_widget");
+            File[] files = directory.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    if (file.isFile() && !file.delete()) {
+                        // A later cleanup pass will remove files still being released by the launcher.
+                    }
+                }
+            }
+            SettingsManager.write(SettingsManager.GENERATED_IMAGES, "[]", ignored -> callback.run());
+        });
+    }
+
     private static void deleteFiles(Context context, List<String> files) {
         for (String file : files) {
             new File(context.getFilesDir(), "generated_widget/" + file).delete();
