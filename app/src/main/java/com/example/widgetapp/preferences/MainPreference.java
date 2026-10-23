@@ -11,6 +11,7 @@ import androidx.preference.PreferenceFragmentCompat;
 import com.example.widgetapp.MainActivity;
 import com.example.widgetapp.R;
 import com.example.widgetapp.SettingsManager;
+import com.example.widgetapp.widgets.gen.GeneratedImageStore;
 
 import java.util.Objects;
 
@@ -44,6 +45,14 @@ public class MainPreference extends PreferenceFragmentCompat {
 
             SettingsManager.resetData(SettingsManager.QUOTEANDFACT);
             SettingsManager.resetData(SettingsManager.UPLOADEDIMAGES);
+            SettingsManager.resetData(SettingsManager.GENERATED_SCALE);
+            SettingsManager.resetData(SettingsManager.GENERATED_OCTAVES);
+            SettingsManager.resetData(SettingsManager.GENERATED_PALETTE);
+            SettingsManager.resetData(SettingsManager.GENERATED_ALGORITHM);
+            SettingsManager.resetData(SettingsManager.GENERATED_SPEED);
+            SettingsManager.resetData(SettingsManager.GENERATED_DURATION);
+            SettingsManager.resetData(SettingsManager.GENERATED_SEED);
+            GeneratedImageStore.deleteAll(requireContext());
 
             return false;
         });

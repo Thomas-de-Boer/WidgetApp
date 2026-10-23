@@ -29,6 +29,11 @@
             android:permission="android.permission.BIND_REMOTEVIEWS">
 
         </service>
+        <service
+            android:name=".widgets.gen.GeneratedImageWidgetService"
+            android:permission="android.permission.BIND_REMOTEVIEWS">
+
+        </service>
 
         <receiver android:name=".widgets.image.WidgetProviderImages" android:exported="true" android:label="@string/image_widget_name">
             <intent-filter>

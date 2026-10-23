@@ -35,6 +35,14 @@ public class SettingsManager {
     public static final Preferences.Key<Float> QUOTEANDFACT = PreferencesKeys.floatKey("QUOTEANDFACT");
 //    public static final Preferences.Key<Set<String>> UPLOADEDIMAGES = PreferencesKeys.stringSetKey("UPLOADEDIMAGES");
     public static final Preferences.Key<String> UPLOADEDIMAGES = PreferencesKeys.stringKey("UPLOADEDIMAGESSTRING");
+    public static final Preferences.Key<Float> GENERATED_SCALE = PreferencesKeys.floatKey("GENERATED_SCALE");
+    public static final Preferences.Key<Integer> GENERATED_OCTAVES = PreferencesKeys.intKey("GENERATED_OCTAVES");
+    public static final Preferences.Key<Integer> GENERATED_PALETTE = PreferencesKeys.intKey("GENERATED_PALETTE");
+    public static final Preferences.Key<Integer> GENERATED_ALGORITHM = PreferencesKeys.intKey("GENERATED_ALGORITHM");
+    public static final Preferences.Key<Integer> GENERATED_SPEED = PreferencesKeys.intKey("GENERATED_SPEED");
+    public static final Preferences.Key<Integer> GENERATED_DURATION = PreferencesKeys.intKey("GENERATED_DURATION");
+    public static final Preferences.Key<Long> GENERATED_SEED = PreferencesKeys.longKey("GENERATED_SEED");
+    public static final Preferences.Key<String> GENERATED_IMAGES = PreferencesKeys.stringKey("GENERATED_IMAGES");
 
 
     private SettingsManager() { }
@@ -99,6 +107,14 @@ public class SettingsManager {
     }
 
     public static String readsyncImages() {
+        return readsync(UPLOADEDIMAGES);
+    }
+
+    public static String readsyncGeneratedImages() {
+        return readsync(GENERATED_IMAGES);
+    }
+
+    public static <T> T readsync(Preferences.Key<T> key) {
         ListenableFuture<Preferences> future = getDataStore().getDataAsync();
         Preferences preferences;
         try {
@@ -107,7 +123,7 @@ public class SettingsManager {
             return null;
         }
 
-        return preferences.get(UPLOADEDIMAGES);
+        return preferences.get(key);
     }
 
     public static List<String> deserializeString(String string) {

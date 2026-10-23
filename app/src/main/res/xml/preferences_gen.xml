@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <Preference
+        android:title="@string/generated_settings_update_warning_title"
+        android:summary="@string/generated_settings_update_warning_summary"
+        app:selectable="false" />
+
+    <SeekBarPreference
+        app:key="generated_scale"
+        app:title="Noise scale"
+        app:summary="Controls the size of the generated shapes"
+        app:min="1"
+        android:max="12"
+        app:seekBarIncrement="1" />
+
+    <SeekBarPreference
+        app:key="generated_octaves"
+        app:title="Noise detail"
+        app:summary="Controls the amount of layered detail"
+        app:min="1"
+        android:max="6"
+        app:seekBarIncrement="1" />
+
+    <SeekBarPreference
+        app:key="generated_speed"
+        app:title="Map movement speed"
+        app:summary="Controls how quickly the noise map changes between frames"
+        app:min="1"
+        android:max="5"
+        app:defaultValue="1"
+        app:seekBarIncrement="1" />
+
+    <SeekBarPreference
+        app:key="generated_duration"
+        app:title="Animation duration"
+        app:summary="How long one complete map animation takes"
+        app:min="10"
+        android:max="60"
+        app:defaultValue="10"
+        app:seekBarIncrement="1" />
+
+    <ListPreference
+        app:key="generated_palette"
+        app:title="Color palette"
+        app:entries="@array/generated_palette_names"
+        app:entryValues="@array/generated_palette_values"
+        app:defaultValue="0" />
+
+    <ListPreference
+        app:key="generated_algorithm"
+        app:title="Noise algorithm"
+        app:summary="Choose how the noise map is shaped"
+        app:entries="@array/generated_algorithm_names"
+        app:entryValues="@array/generated_algorithm_values"
+        app:defaultValue="0" />
+
+    <Preference
+        app:key="generated_reset"
+        app:title="Reset generated images"
+        app:summary="Delete the stored animation and generate a fresh one" />
+
+</PreferenceScreen>

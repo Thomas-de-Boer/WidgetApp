@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity implements WidgetSettingsLis
     public void onWidgetSettingsRequested(WidgetItem.widgetTypes widgetType) {
         getSupportFragmentManager()
                 .beginTransaction()
-                .replace(R.id.fswFragment, new WidgetSettingsFragment(widgetType, fswFragment))
+                .replace(R.id.fswFragment, WidgetSettingsFragment.newInstance(widgetType))
                 .commit();
 
         fswFragment.setVisibility(View.VISIBLE);

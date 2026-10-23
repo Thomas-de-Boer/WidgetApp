@@ -14,6 +14,7 @@ import com.example.widgetapp.SettingsManager;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 public class ImageWidgetFactory implements RemoteViewsService.RemoteViewsFactory {
@@ -26,7 +27,7 @@ public class ImageWidgetFactory implements RemoteViewsService.RemoteViewsFactory
 
     @Override
     public int getCount() {
-        if (uploadedFileNames.isEmpty())
+        if (uploadedFileNames == null || uploadedFileNames.isEmpty())
             return 1;
 
         return uploadedFileNames.size();
@@ -34,12 +35,12 @@ public class ImageWidgetFactory implements RemoteViewsService.RemoteViewsFactory
 
     @Override
     public long getItemId(int position) {
-        return 0;
+        return position;
     }
 
     @Override
     public RemoteViews getLoadingView() {
-        return null;
+        return new RemoteViews(context.getPackageName(), R.layout.flipper_item);
     }
 
     @Override
@@ -47,31 +48,33 @@ public class ImageWidgetFactory implements RemoteViewsService.RemoteViewsFactory
 
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.flipper_item);
 
-        if (uploadedFileNames.isEmpty())
+        if (uploadedFileNames == null || uploadedFileNames.isEmpty())
             return views;
 
-        try {
-            String temp = uploadedFileNames.get(position);
-        } catch (Exception e) {
+        if (position < 0 || position >= uploadedFileNames.size()) {
             return views;
         }
 
-        FileInputStream fileInputStream;
-        try {
-            fileInputStream = context.openFileInput(uploadedFileNames.get(position));
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-
-        Bitmap bitmap = BitmapFactory.decodeStream(fileInputStream);
-        try {
-            fileInputStream.close();
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        try (InputStream boundsStream = context.openFileInput(uploadedFileNames.get(position))) {
+            BitmapFactory.decodeStream(boundsStream, null, options);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            return views;
         }
 
-        views.setImageViewBitmap(R.id.flipper_item_image, bitmap);
-        views.setTextViewText(R.id.flipper_item_text, "");
+        options.inSampleSize = calculateSampleSize(options.outWidth, options.outHeight, 320, 320);
+        options.inJustDecodeBounds = false;
+        Bitmap bitmap;
+        try (InputStream imageStream = context.openFileInput(uploadedFileNames.get(position))) {
+            bitmap = BitmapFactory.decodeStream(imageStream, null, options);
+        } catch (IOException e) {
+            return views;
+        }
+        if (bitmap != null) {
+            views.setImageViewBitmap(R.id.flipper_item_image, bitmap);
+            views.setTextViewText(R.id.flipper_item_text, "");
+        }
 
         return views;
     }
@@ -102,6 +105,14 @@ public class ImageWidgetFactory implements RemoteViewsService.RemoteViewsFactory
 
     @Override
     public void onDestroy() {
+    }
 
+    private int calculateSampleSize(int width, int height, int targetWidth, int targetHeight) {
+        int sampleSize = 1;
+        while (width / (sampleSize * 2) >= targetWidth
+                || height / (sampleSize * 2) >= targetHeight) {
+            sampleSize *= 2;
+        }
+        return sampleSize;
     }
 }

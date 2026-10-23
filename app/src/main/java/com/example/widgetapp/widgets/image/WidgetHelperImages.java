@@ -4,6 +4,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.widget.AdapterViewFlipper;
 import android.widget.RemoteViews;
 
@@ -51,7 +52,9 @@ public class WidgetHelperImages {
 
 
             Intent factoryIntent = new Intent(context, ImageWidgetService.class);
+            factoryIntent.setData(Uri.parse(factoryIntent.toUri(Intent.URI_INTENT_SCHEME)));
             views.setRemoteAdapter(R.id.widget_images_flipper, factoryIntent);
+            views.setEmptyView(R.id.widget_images_flipper, R.id.widget_images_empty);
 
 
 //            views.setImageViewBitmap(R.id.flipper_item_image, bitmap);

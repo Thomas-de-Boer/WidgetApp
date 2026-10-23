@@ -29,31 +29,45 @@ public class WidgetSettingsFragment extends Fragment {
 
     HashMap<WidgetItem.widgetTypes, PreferenceFragmentCompat> typeToPreference = new HashMap<>();
 
-    public WidgetSettingsFragment(WidgetItem.widgetTypes widgetType, FrameLayout fswFragment) {
-        this.widgetType = widgetType;
-        this.fswFragment = fswFragment;
-
-        typeToPreference.put(WidgetItem.widgetTypes.QUOTES, new QuotePreference());
-        typeToPreference.put(WidgetItem.widgetTypes.IMAGES, new ImagePreference());
-        typeToPreference.put(WidgetItem.widgetTypes.GEN, new GenPreference());
+    public WidgetSettingsFragment() {
     }
 
-    @Nullable
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_settings_widgets, container, false);
+    public static WidgetSettingsFragment newInstance(WidgetItem.widgetTypes widgetType) {
+        WidgetSettingsFragment fragment = new WidgetSettingsFragment();
+        Bundle arguments = new Bundle();
+        arguments.putString("widget_type", widgetType.name());
+        fragment.setArguments(arguments);
+        return fragment;
+    }
+
+    public WidgetSettingsFragment(WidgetItem.widgetTypes widgetType, FrameLayout fswFragment) {
+        this();
+        this.widgetType = widgetType;
+        this.fswFragment = fswFragment;
     }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (widgetType == null && getArguments() != null) {
+            String type = getArguments().getString("widget_type");
+            if (type != null) {
+                widgetType = WidgetItem.widgetTypes.valueOf(type);
+            }
+        }
+        if (widgetType == null) {
+            widgetType = WidgetItem.widgetTypes.GEN;
+        }
+        typeToPreference.put(WidgetItem.widgetTypes.QUOTES, new QuotePreference());
+        typeToPreference.put(WidgetItem.widgetTypes.IMAGES, new ImagePreference());
+        typeToPreference.put(WidgetItem.widgetTypes.GEN, new GenPreference());
 
-        requireActivity().getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragment_settings_quotes_settings_container, typeToPreference.get(widgetType))
-                .commit();
+    }
 
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_settings_widgets, container, false);
     }
 
     @Override
@@ -61,11 +75,17 @@ public class WidgetSettingsFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         ImageView imageView = view.findViewById(R.id.fragment_settings_quotes_image);
+        fswFragment = requireActivity().findViewById(R.id.fswFragment);
+
+        getChildFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_settings_quotes_settings_container, typeToPreference.get(widgetType))
+                .commit();
 
         imageView.setOnClickListener(v -> {
             fswFragment.setVisibility(View.GONE);
 
-            requireActivity().getSupportFragmentManager()
+            getChildFragmentManager()
                     .beginTransaction()
                     .remove(typeToPreference.get(widgetType))
                     .commit();
