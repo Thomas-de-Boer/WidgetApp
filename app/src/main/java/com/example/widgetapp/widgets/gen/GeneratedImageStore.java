@@ -2,7 +2,8 @@ package com.example.widgetapp.widgets.gen;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.Color;
+import android.os.SystemClock;
+import android.util.Log;
 
 import com.example.widgetapp.SettingsManager;
 import com.google.gson.Gson;
@@ -13,15 +14,22 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public final class GeneratedImageStore {
-    private static final int IMAGE_SIZE = 192;
-    private static final int FRAME_COUNT = 120;
+    private static final int IMAGE_SIZE = NoiseRenderer.IMAGE_SIZE;
+    public static final int FRAME_COUNT = 180;
+    // per speed setting (1-5): how many different noise maps one loop morphs through,
+    // and how many times the warp flows around in that loop (whole numbers, so the loop stays seamless)
+    private static final int[] MORPH_COUNT = {2, 3, 4, 5, 6};
+    private static final int[] WARP_TURNS = {1, 1, 2, 2, 3};
     private static final Gson GSON = new Gson();
     private static final ExecutorService GENERATION_EXECUTOR = Executors.newSingleThreadExecutor();
 
@@ -40,9 +48,10 @@ public final class GeneratedImageStore {
                                                 SettingsManager.Callback<Bitmap> callback) {
         GENERATION_EXECUTOR.execute(() -> {
             Random random = new Random(seed);
-            float[][] noise = createNoise(5f, 4, algorithm, seed,
-                    random.nextFloat() * 10000f, random.nextFloat() * 10000f, 0f);
-            callback.onResult(render(noise, palette));
+            int[] pixels = new int[IMAGE_SIZE * IMAGE_SIZE];
+            new NoiseRenderer(palette).render(5f, 4, algorithm, seed,
+                    random.nextFloat() * 10000f, random.nextFloat() * 10000f, 0f, 0f, 1, pixels);
+            callback.onResult(Bitmap.createBitmap(pixels, IMAGE_SIZE, IMAGE_SIZE, Bitmap.Config.ARGB_8888));
         });
     }
 
@@ -60,32 +69,31 @@ public final class GeneratedImageStore {
         String stagingPrefix = "staging_" + generationId;
         List<String> generated = new ArrayList<>();
         List<String> staged = new ArrayList<>();
+        long startTime = SystemClock.elapsedRealtime();
+        long startCpuTime = SystemClock.currentThreadTimeMillis();
+        NoiseRenderer renderer = new NoiseRenderer(palette);
+        int[] pixels = new int[IMAGE_SIZE * IMAGE_SIZE];
+        Bitmap bitmap = Bitmap.createBitmap(IMAGE_SIZE, IMAGE_SIZE, Bitmap.Config.ARGB_8888);
         try {
             Random random = new Random(seed);
-            float baseOffsetX = random.nextFloat() * 10000;
-            float baseOffsetY = random.nextFloat() * 10000;
-            float normalizedSpeed = Math.max(1, Math.min(5, speed)) - 1;
-            float speedCurve = normalizedSpeed * normalizedSpeed;
-            float motionRadiusX = 0.02f + speedCurve * 0.75f;
-            float motionRadiusY = 0.015f + speedCurve * 0.6f;
-            float phaseAmplitude = 0.15f + speedCurve * 3f;
+            float offsetX = random.nextFloat() * 10000;
+            float offsetY = random.nextFloat() * 10000;
+            int speedIndex = Math.max(1, Math.min(5, speed)) - 1;
+            int morphCount = MORPH_COUNT[speedIndex];
+            int warpTurns = WARP_TURNS[speedIndex];
             for (int frame = 0; frame < FRAME_COUNT; frame++) {
                 String stagedName = stagingPrefix + "_" + frame + ".jpg";
                 String generatedName = generatedPrefix + "_" + frame + ".jpg";
                 File file = new File(directory, stagedName);
-                float motion = (frame / (float) FRAME_COUNT) * (float) (Math.PI * 2);
-                float phase = (float) Math.sin(motion) * phaseAmplitude;
-                float[][] noise = createNoise(scale, octaves, algorithm, seed,
-                        baseOffsetX + (float) Math.sin(motion) * motionRadiusX,
-                        baseOffsetY + (float) Math.cos(motion) * motionRadiusY,
-                        phase);
-                Bitmap bitmap = render(noise, palette);
+                float progress = frame / (float) FRAME_COUNT;
+                float phase = progress * warpTurns * (float) (Math.PI * 2);
+                renderer.render(scale, octaves, algorithm, seed, offsetX, offsetY,
+                        phase, progress * morphCount, morphCount, pixels);
+                bitmap.setPixels(pixels, 0, IMAGE_SIZE, 0, 0, IMAGE_SIZE, IMAGE_SIZE);
                 try (FileOutputStream output = new FileOutputStream(file)) {
                     if (!bitmap.compress(Bitmap.CompressFormat.JPEG, 88, output)) {
                         throw new IOException("Could not compress generated image");
                     }
-                } finally {
-                    bitmap.recycle();
                 }
                 staged.add(stagedName);
                 generated.add(generatedName);
@@ -102,7 +110,12 @@ public final class GeneratedImageStore {
             deleteFiles(context, generated);
             callback.onResult(new ArrayList<>());
             return;
+        } finally {
+            bitmap.recycle();
         }
+        Log.i("GeneratedImageStore", "Generated " + FRAME_COUNT + " frames in "
+                + (SystemClock.elapsedRealtime() - startTime) + " ms (cpu "
+                + (SystemClock.currentThreadTimeMillis() - startCpuTime) + " ms)");
 
         SettingsManager.write(SettingsManager.GENERATED_IMAGES, GSON.toJson(generated), ignored -> {
             deleteFilesExcept(context, generated);
@@ -138,6 +151,67 @@ public final class GeneratedImageStore {
         });
     }
 
+    // the frames of the newest complete animation, in playback order
+    public static List<String> findCurrentFrames(Context context) {
+        File directory = new File(context.getFilesDir(), "generated_widget");
+        File[] imageFiles = directory.listFiles((dir, name) ->
+                name.startsWith("generated_") && name.endsWith(".jpg"));
+        if (imageFiles == null) {
+            return new ArrayList<>();
+        }
+
+        Map<String, List<File>> filesBySet = new HashMap<>();
+        for (File imageFile : imageFiles) {
+            int frameSeparator = imageFile.getName().lastIndexOf('_');
+            if (frameSeparator < 0) {
+                continue;
+            }
+            String setName = imageFile.getName().substring(0, frameSeparator);
+            filesBySet.computeIfAbsent(setName, ignored -> new ArrayList<>()).add(imageFile);
+        }
+
+        String newestSet = null;
+        long newestTime = Long.MIN_VALUE;
+        for (Map.Entry<String, List<File>> entry : filesBySet.entrySet()) {
+            if (entry.getValue().size() != FRAME_COUNT) {
+                continue;
+            }
+            long setTime = 0;
+            for (File file : entry.getValue()) {
+                setTime = Math.max(setTime, file.lastModified());
+            }
+            if (setTime > newestTime) {
+                newestSet = entry.getKey();
+                newestTime = setTime;
+            }
+        }
+
+        List<String> result = new ArrayList<>();
+        if (newestSet == null) {
+            return result;
+        }
+        for (File imageFile : imageFiles) {
+            if (imageFile.getName().startsWith(newestSet + "_")) {
+                result.add(imageFile.getName());
+            }
+        }
+        result.sort(Comparator.comparingInt(GeneratedImageStore::frameNumber));
+        return result;
+    }
+
+    private static int frameNumber(String fileName) {
+        int separator = fileName.lastIndexOf('_');
+        int extension = fileName.lastIndexOf('.');
+        if (separator < 0 || extension <= separator) {
+            return Integer.MAX_VALUE;
+        }
+        try {
+            return Integer.parseInt(fileName.substring(separator + 1, extension));
+        } catch (NumberFormatException ignored) {
+            return Integer.MAX_VALUE;
+        }
+    }
+
     private static void deleteFiles(Context context, List<String> files) {
         for (String file : files) {
             new File(context.getFilesDir(), "generated_widget/" + file).delete();
@@ -157,125 +231,5 @@ public final class GeneratedImageStore {
                 file.delete();
             }
         }
-    }
-
-    private static float[][] createNoise(float scale, int octaves, int algorithm, long seed,
-                                         float offsetX, float offsetY, float phase) {
-        float[][] result = new float[IMAGE_SIZE][IMAGE_SIZE];
-        float totalWeight = 0;
-
-        for (int octave = 0; octave < octaves; octave++) {
-            int gridSize = Math.max(2, Math.round(scale * (1 << octave)));
-            float weight = 1f / (1 << octave);
-            totalWeight += weight;
-            for (int y = 0; y < IMAGE_SIZE; y++) {
-                for (int x = 0; x < IMAGE_SIZE; x++) {
-                    float sampleX = (x / (float) IMAGE_SIZE) * gridSize + offsetX;
-                    float sampleY = (y / (float) IMAGE_SIZE) * gridSize + offsetY;
-                    float warpAmount = algorithm == 4
-                            ? 0.05f + octave * 0.02f
-                            : 0.18f + octave * 0.04f;
-                    float warpedX = sampleX
-                            + (float) Math.sin(sampleY * 1.35f + phase) * warpAmount;
-                    float warpedY = sampleY
-                            + (float) Math.cos(sampleX * 1.15f - phase) * warpAmount;
-                    float value = valueNoise(warpedX, warpedY, seed + octave * 7919L);
-                    switch (algorithm) {
-                        case 1:
-                            value = 1f - Math.abs(2f * value - 1f);
-                            break;
-                        case 2:
-                            value = Math.abs(2f * value - 1f);
-                            break;
-                        case 3:
-                            value = (float) Math.pow(value, 2.2f);
-                            break;
-                        case 4:
-                            float bands = 0.5f + 0.5f * (float) Math.sin(
-                                    warpedX * 2.4f + warpedY * 0.8f + phase
-                            );
-                            value = lerp(value, bands, 0.72f);
-                            break;
-                        case 5:
-                            value = 1f - Math.abs(2f * value - 1f);
-                            value = value * value * (3f - 2f * value);
-                            break;
-                        case 6:
-                            float island = smooth(value);
-                            value = island < 0.42f ? island * 0.35f : 0.35f + (island - 0.42f) * 1.12f;
-                            break;
-                    }
-                    result[x][y] += value * weight;
-                }
-            }
-        }
-
-        for (int y = 0; y < IMAGE_SIZE; y++) {
-            for (int x = 0; x < IMAGE_SIZE; x++) {
-                result[x][y] /= totalWeight;
-            }
-        }
-        return result;
-    }
-
-    private static float valueNoise(float x, float y, long seed) {
-        int x0 = (int) Math.floor(x);
-        int y0 = (int) Math.floor(y);
-        float tx = smooth(x - x0);
-        float ty = smooth(y - y0);
-        float top = lerp(hash(x0, y0, seed), hash(x0 + 1, y0, seed), tx);
-        float bottom = lerp(hash(x0, y0 + 1, seed), hash(x0 + 1, y0 + 1, seed), tx);
-        return lerp(top, bottom, ty);
-    }
-
-    private static float hash(int x, int y, long seed) {
-        long value = seed + x * 374761393L + y * 668265263L;
-        value = (value ^ (value >> 13)) * 1274126177L;
-        value ^= value >> 16;
-        return (value & 0x7fffffff) / (float) Integer.MAX_VALUE;
-    }
-
-    private static float smooth(float value) {
-        return value * value * (3 - 2 * value);
-    }
-
-    private static float lerp(float first, float second, float amount) {
-        return first + (second - first) * amount;
-    }
-
-    private static Bitmap render(float[][] noise, int palette) {
-        Bitmap bitmap = Bitmap.createBitmap(IMAGE_SIZE, IMAGE_SIZE, Bitmap.Config.ARGB_8888);
-        for (int y = 0; y < IMAGE_SIZE; y++) {
-            for (int x = 0; x < IMAGE_SIZE; x++) {
-                float value = Math.max(0, Math.min(1, noise[x][y]));
-                bitmap.setPixel(x, y, colorFor(value, palette));
-            }
-        }
-        return bitmap;
-    }
-
-    private static int colorFor(float value, int palette) {
-        int[][] colors = {
-                {Color.rgb(15, 32, 64), Color.rgb(34, 139, 167), Color.rgb(244, 210, 122), Color.rgb(250, 245, 224)},
-                {Color.rgb(32, 20, 55), Color.rgb(92, 45, 145), Color.rgb(229, 91, 143), Color.rgb(255, 194, 112)},
-                {Color.rgb(12, 48, 44), Color.rgb(42, 120, 75), Color.rgb(157, 193, 92), Color.rgb(239, 230, 156)},
-                {Color.rgb(8, 18, 38), Color.rgb(25, 70, 145), Color.rgb(67, 170, 210), Color.rgb(220, 245, 255)},
-                {Color.rgb(48, 8, 18), Color.rgb(135, 24, 42), Color.rgb(238, 87, 49), Color.rgb(255, 211, 105)},
-                {Color.rgb(28, 12, 52), Color.rgb(83, 35, 125), Color.rgb(164, 77, 181), Color.rgb(242, 170, 211)},
-                {Color.rgb(20, 28, 24), Color.rgb(84, 69, 45), Color.rgb(164, 125, 69), Color.rgb(238, 218, 157)},
-                {Color.rgb(24, 12, 8), Color.rgb(91, 46, 24), Color.rgb(188, 103, 43), Color.rgb(255, 205, 108)},
-                {Color.rgb(10, 35, 35), Color.rgb(16, 112, 105), Color.rgb(53, 190, 154), Color.rgb(190, 245, 194)}
-        };
-        int[] selected = colors[Math.max(0, Math.min(colors.length - 1, palette))];
-        float position = value * (selected.length - 1);
-        int index = Math.min(selected.length - 2, (int) position);
-        return blend(selected[index], selected[index + 1], position - index);
-    }
-
-    private static int blend(int first, int second, float amount) {
-        int red = (int) (Color.red(first) + (Color.red(second) - Color.red(first)) * amount);
-        int green = (int) (Color.green(first) + (Color.green(second) - Color.green(first)) * amount);
-        int blue = (int) (Color.blue(first) + (Color.blue(second) - Color.blue(first)) * amount);
-        return Color.rgb(red, green, blue);
     }
 }

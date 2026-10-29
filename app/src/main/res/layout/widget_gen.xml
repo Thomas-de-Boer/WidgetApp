@@ -5,11 +5,12 @@
     android:layout_height="match_parent"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <AdapterViewFlipper
+    <!-- 56 ms per frame is ~18 fps, so the 180 frames make a 10 second loop -->
+    <ViewFlipper
         android:id="@+id/widget_gen_flipper"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:flipInterval="500"
+        android:flipInterval="56"
         android:autoStart="true" />
 
     <TextView

@@ -40,9 +40,9 @@ public class SettingsManager {
     public static final Preferences.Key<Integer> GENERATED_PALETTE = PreferencesKeys.intKey("GENERATED_PALETTE");
     public static final Preferences.Key<Integer> GENERATED_ALGORITHM = PreferencesKeys.intKey("GENERATED_ALGORITHM");
     public static final Preferences.Key<Integer> GENERATED_SPEED = PreferencesKeys.intKey("GENERATED_SPEED");
-    public static final Preferences.Key<Integer> GENERATED_DURATION = PreferencesKeys.intKey("GENERATED_DURATION");
     public static final Preferences.Key<Long> GENERATED_SEED = PreferencesKeys.longKey("GENERATED_SEED");
     public static final Preferences.Key<String> GENERATED_IMAGES = PreferencesKeys.stringKey("GENERATED_IMAGES");
+    public static final Preferences.Key<Boolean> GENERATED_RANDOM = PreferencesKeys.booleanKey("GENERATED_RANDOM");
     public static final Preferences.Key<Boolean> QUOTE_AVOID_REPEATS = PreferencesKeys.booleanKey("QUOTE_AVOID_REPEATS");
     public static final Preferences.Key<String> QUOTE_HISTORY = PreferencesKeys.stringKey("QUOTE_HISTORY");
     public static final Preferences.Key<String> FACT_HISTORY = PreferencesKeys.stringKey("FACT_HISTORY");
@@ -82,6 +82,31 @@ public class SettingsManager {
             @Override
             public void onFailure(Throwable t) {
                 callback.onResult(null);
+            }
+        }, executor);
+    }
+
+//    writes all generated widget look settings at once, so nobody reads a half-updated set
+    public static void writeGeneratedSettings(float scale, int octaves, int speed, int palette, int algorithm,
+                                              Runnable callback) {
+        ListenableFuture<Preferences> future = getDataStore().updateDataAsync(preferences -> {
+            MutablePreferences mutablePreferences = preferences.toMutablePreferences();
+            mutablePreferences.set(GENERATED_SCALE, scale);
+            mutablePreferences.set(GENERATED_OCTAVES, octaves);
+            mutablePreferences.set(GENERATED_SPEED, speed);
+            mutablePreferences.set(GENERATED_PALETTE, palette);
+            mutablePreferences.set(GENERATED_ALGORITHM, algorithm);
+            return mutablePreferences;
+        });
+        Futures.addCallback(future, new FutureCallback<Preferences>() {
+            @Override
+            public void onSuccess(Preferences result) {
+                callback.run();
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                callback.run();
             }
         }, executor);
     }

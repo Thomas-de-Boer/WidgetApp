@@ -81,7 +81,7 @@ public class WidgetHelperQuotes {
         views.setTextViewText(R.id.quote, chosenText);
 
         if (fact) {
-            int algorithm = RANDOM.nextInt(7);
+            int algorithm = RANDOM.nextInt(10);
             int palette = RANDOM.nextInt(9);
             GeneratedImageStore.generateSingleBackground(
                     context, palette, algorithm, RANDOM.nextLong(), bitmap -> {
