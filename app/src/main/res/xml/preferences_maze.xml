@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <SeekBarPreference
+        app:key="maze_cells"
+        app:title="Cell amount"
+        app:summary="Cells per row and column. Changing this makes new mazes"
+        app:min="8"
+        android:max="25"
+        app:defaultValue="15"
+        app:showSeekBarValue="true"
+        app:seekBarIncrement="1" />
+
+    <SeekBarPreference
+        app:key="maze_speed"
+        app:title="Solver speed"
+        app:summary="Cells per second, the same for every maze size"
+        app:min="10"
+        android:max="60"
+        app:defaultValue="30"
+        app:showSeekBarValue="true"
+        app:seekBarIncrement="5" />
+
+    <ListPreference
+        app:key="maze_style"
+        app:title="Maze style"
+        app:summary="Choose how the maze is shaped. Changing this makes new mazes"
+        app:entries="@array/maze_style_names"
+        app:entryValues="@array/maze_style_values"
+        app:defaultValue="0" />
+
+    <ListPreference
+        app:key="maze_theme"
+        app:title="Color theme"
+        app:entries="@array/maze_theme_names"
+        app:entryValues="@array/maze_theme_values"
+        app:defaultValue="0" />
+
+</PreferenceScreen>

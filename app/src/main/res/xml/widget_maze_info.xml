@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minHeight="180dp"
+    android:minWidth="180dp"
+    android:targetCellWidth="3"
+    android:targetCellHeight="3"
+    android:updatePeriodMillis="86400000"
+    android:initialLayout="@layout/widget_maze_initial"
+    android:resizeMode="none"
+    android:widgetCategory="home_screen"
+    android:previewImage="@drawable/maze_widget_preview"
+    android:description="@string/maze_widget_description"
+    />

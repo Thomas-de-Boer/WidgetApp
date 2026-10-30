@@ -6,6 +6,6 @@
     android:initialLayout="@layout/widget_gen_initial"
     android:resizeMode="vertical|horizontal"
     android:widgetCategory="home_screen"
-    android:previewLayout="@layout/widget_gen_initial"
+    android:previewImage="@drawable/gen_widget_preview"
     android:description="@string/gen_widget_description"
     />

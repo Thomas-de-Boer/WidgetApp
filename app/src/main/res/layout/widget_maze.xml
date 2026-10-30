@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    android:id="@+id/widget_maze"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="8dp"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <ImageView
+            android:id="@+id/widget_maze_image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitCenter" />
+
+        <!-- 40 ms per frame is 25 fps, has to match FLIP_INTERVAL_MILLIS in MazeRenderer -->
+        <ViewFlipper
+            android:id="@+id/widget_maze_flipper"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:flipInterval="40"
+            android:autoStart="true"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/widget_maze_empty"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="@string/maze_widget_loading"
+            android:visibility="gone" />
+
+    </FrameLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/widget_maze_new"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:minHeight="40dp"
+            android:textAllCaps="false"
+            android:text="@string/maze_new" />
+
+        <Button
+            android:id="@+id/widget_maze_solve"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:minHeight="40dp"
+            android:textAllCaps="false"
+            android:text="@string/maze_solve" />
+
+    </LinearLayout>
+
+</LinearLayout>

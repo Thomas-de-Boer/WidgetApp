@@ -24,10 +24,17 @@
     <string name="generated_settings_update_warning_title">Widget update delay</string>
     <string name="generated_settings_update_warning_summary">After changing settings, it can take 5–10 seconds for the widget to update. This is normal.</string>
 
+    <string name="maze_widget_name">Maze Widget</string>
+    <string name="maze_widget_description">A generated maze with a button that shows the way out</string>
+    <string name="maze_widget_loading">Generating maze...</string>
+    <string name="maze_new">New maze</string>
+    <string name="maze_solve">Solve</string>
+
     <string name="done">continue</string>
     <string name="info_quotes">Show a fresh quote or fun fact on your home screen. The widget refreshes itself, so something new comes by regularly. In the settings you choose which types of quotes you want to see.</string>
     <string name="info_images">Show your own photos on your home screen. Upload photos in the app and the widget cycles through them every so often. You get something new to look at instead of a fixed icon. Your photos stay on your own phone, no account or server needed.</string>
     <string name="info_gen">Shows images created by an algorithm. Each time the widget refreshes, you see something new that has never been created before. In the settings, you can choose how the images look.</string>
+    <string name="info_maze">Shows a maze that is generated just for you, with exactly one way out. Press Solve to watch the path being drawn, or New maze to get another one. Every 30 minutes the widget makes a new maze by itself. In the settings, you can choose the size, solver speed, style and colors.</string>
     <string name="delete">Delete</string>
 
     <string-array name="generated_palette_names">
@@ -75,6 +82,28 @@
         <item>7</item>
         <item>8</item>
         <item>9</item>
+    </string-array>
+    <string-array name="maze_style_names">
+        <item>Winding</item>
+        <item>Branchy</item>
+        <item>Balanced</item>
+    </string-array>
+    <string-array name="maze_style_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+    <string-array name="maze_theme_names">
+        <item>Midnight</item>
+        <item>Paper</item>
+        <item>Forest</item>
+        <item>Sunset</item>
+    </string-array>
+    <string-array name="maze_theme_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
     </string-array>
 
 </resources>
