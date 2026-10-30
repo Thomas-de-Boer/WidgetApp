@@ -24,6 +24,7 @@ import androidx.preference.PreferenceFragmentCompat;
 
 import com.tdeboer.widgetapp.R;
 import com.tdeboer.widgetapp.SettingsManager;
+import com.tdeboer.widgetapp.fragments.WidgetSettingsFragment;
 import com.tdeboer.widgetapp.widgets.image.WidgetHelperImages;
 import com.tdeboer.widgetapp.widgets.image.WidgetProviderImages;
 import com.google.gson.reflect.TypeToken;
@@ -41,6 +42,7 @@ import java.util.UUID;
 
 public class ImagePreference extends PreferenceFragmentCompat {
 
+    int appWidgetId;
     Preference uploadImage;
     ImageListPreference uploadedImage;
     AppWidgetManager widgetManager;
@@ -53,8 +55,10 @@ public class ImagePreference extends PreferenceFragmentCompat {
     public void onCreatePreferences(@Nullable Bundle savedInstanceState, @Nullable String rootKey) {
         setPreferencesFromResource(R.xml.preferences_images, rootKey);
 
+        appWidgetId = requireArguments().getInt(WidgetSettingsFragment.ARGUMENT_WIDGET_ID);
         uploadImage = findPreference("upload_image");
         uploadedImage = findPreference("uploaded_images");
+        uploadedImage.setAppWidgetId(appWidgetId);
         widgetManager = AppWidgetManager.getInstance(requireContext());
 
         ActivityResultLauncher<PickVisualMediaRequest> pickMultipleMedia =
@@ -142,17 +146,15 @@ public class ImagePreference extends PreferenceFragmentCompat {
 //                });
 
 
-                SettingsManager.read(SettingsManager.UPLOADEDIMAGES, null, string -> {
+                SettingsManager.readWidget(SettingsManager.UPLOADEDIMAGES, appWidgetId, null, string -> {
                     Gson gson = new Gson();
 
                     uploadedFileNames.addAll(SettingsManager.deserializeString(string));
 
 
 
-                    SettingsManager.write(SettingsManager.UPLOADEDIMAGES, gson.toJson(uploadedFileNames), s -> {
-                        int[] appWidgetIds = widgetManager.getAppWidgetIds(new ComponentName(requireContext(), WidgetProviderImages.class));
-
-                        WidgetProviderImages.update(getContext(), widgetManager, appWidgetIds);
+                    SettingsManager.writeWidget(SettingsManager.UPLOADEDIMAGES, appWidgetId, gson.toJson(uploadedFileNames), s -> {
+                        WidgetProviderImages.update(getContext(), widgetManager, new int[]{appWidgetId});
 
 //                        refresh only after the list is saved, otherwise the screen keeps a list without the new images
                         new Handler(requireContext().getMainLooper()).post(uploadedImage::notifyChange);

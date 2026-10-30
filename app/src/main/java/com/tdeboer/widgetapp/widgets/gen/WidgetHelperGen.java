@@ -13,7 +13,7 @@ import java.util.List;
 
 public class WidgetHelperGen {
 
-    public static RemoteViews makeView(Context context) {
+    public static RemoteViews makeView(Context context, int appWidgetId) {
         Intent intent = new Intent(context, MainActivity.class);
 
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_MUTABLE);
@@ -25,7 +25,7 @@ public class WidgetHelperGen {
         // and set both visibilities every time; otherwise the new frames are appended to the old ones
         // and the previous animation keeps playing in between
         views.removeAllViews(R.id.widget_gen_flipper);
-        List<String> frames = GeneratedImageStore.findCurrentFrames(context);
+        List<String> frames = GeneratedImageStore.findCurrentFrames(context, appWidgetId);
         views.setViewVisibility(R.id.widget_gen_flipper, frames.isEmpty() ? View.GONE : View.VISIBLE);
         views.setViewVisibility(R.id.widget_gen_empty, frames.isEmpty() ? View.VISIBLE : View.GONE);
 

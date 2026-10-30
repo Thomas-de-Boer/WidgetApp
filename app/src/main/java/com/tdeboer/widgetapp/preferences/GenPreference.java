@@ -12,10 +12,12 @@ import androidx.preference.SwitchPreferenceCompat;
 
 import com.tdeboer.widgetapp.R;
 import com.tdeboer.widgetapp.SettingsManager;
+import com.tdeboer.widgetapp.fragments.WidgetSettingsFragment;
 import com.tdeboer.widgetapp.widgets.gen.WidgetProviderGen;
 import com.tdeboer.widgetapp.widgets.gen.GeneratedImageStore;
 
 public class GenPreference extends PreferenceFragmentCompat {
+    private int appWidgetId;
     private SeekBarPreference scale;
     private SeekBarPreference octaves;
     private SeekBarPreference speed;
@@ -27,6 +29,7 @@ public class GenPreference extends PreferenceFragmentCompat {
     public void onCreatePreferences(@Nullable Bundle savedInstanceState, @Nullable String rootKey) {
         setPreferencesFromResource(R.xml.preferences_gen, rootKey);
 
+        appWidgetId = requireArguments().getInt(WidgetSettingsFragment.ARGUMENT_WIDGET_ID);
         scale = findPreference("generated_scale");
         octaves = findPreference("generated_octaves");
         speed = findPreference("generated_speed");
@@ -38,7 +41,7 @@ public class GenPreference extends PreferenceFragmentCompat {
         if (random != null) {
             random.setOnPreferenceChangeListener((preference, value) -> {
                 boolean enabled = (Boolean) value;
-                SettingsManager.write(SettingsManager.GENERATED_RANDOM, enabled, ignored -> {
+                SettingsManager.writeWidget(SettingsManager.GENERATED_RANDOM, appWidgetId, enabled, ignored -> {
                     if (enabled) {
                         refreshWidgets();
                     }
@@ -48,41 +51,41 @@ public class GenPreference extends PreferenceFragmentCompat {
         }
         if (scale != null) {
             scale.setOnPreferenceChangeListener((preference, value) -> {
-                SettingsManager.write(SettingsManager.GENERATED_SCALE, ((Integer) value).floatValue(),
+                SettingsManager.writeWidget(SettingsManager.GENERATED_SCALE, appWidgetId, ((Integer) value).floatValue(),
                         ignored -> refreshWidgetsWithCurrentSettings());
                 return true;
             });
         }
         if (resetGenerated != null) {
             resetGenerated.setOnPreferenceClickListener(preference -> {
-                GeneratedImageStore.reset(requireContext(), this::refreshWidgets);
+                GeneratedImageStore.reset(requireContext(), appWidgetId, this::refreshWidgets);
                 return true;
             });
         }
         if (octaves != null) {
             octaves.setOnPreferenceChangeListener((preference, value) -> {
-                SettingsManager.write(SettingsManager.GENERATED_OCTAVES, (Integer) value,
+                SettingsManager.writeWidget(SettingsManager.GENERATED_OCTAVES, appWidgetId, (Integer) value,
                         ignored -> refreshWidgetsWithCurrentSettings());
                 return true;
             });
         }
         if (speed != null) {
             speed.setOnPreferenceChangeListener((preference, value) -> {
-                SettingsManager.write(SettingsManager.GENERATED_SPEED, (Integer) value,
+                SettingsManager.writeWidget(SettingsManager.GENERATED_SPEED, appWidgetId, (Integer) value,
                         ignored -> refreshWidgetsWithCurrentSettings());
                 return true;
             });
         }
         if (palette != null) {
             palette.setOnPreferenceChangeListener((preference, value) -> {
-                SettingsManager.write(SettingsManager.GENERATED_PALETTE, Integer.parseInt((String) value),
+                SettingsManager.writeWidget(SettingsManager.GENERATED_PALETTE, appWidgetId, Integer.parseInt((String) value),
                         ignored -> refreshWidgetsWithCurrentSettings());
                 return true;
             });
         }
         if (algorithm != null) {
             algorithm.setOnPreferenceChangeListener((preference, value) -> {
-                SettingsManager.write(SettingsManager.GENERATED_ALGORITHM,
+                SettingsManager.writeWidget(SettingsManager.GENERATED_ALGORITHM, appWidgetId,
                         Integer.parseInt((String) value), ignored -> refreshWidgetsWithCurrentSettings());
                 return true;
             });
@@ -104,32 +107,32 @@ public class GenPreference extends PreferenceFragmentCompat {
     }
 
     private void loadValues() {
-        SettingsManager.read(SettingsManager.GENERATED_SCALE, 5f, value -> runOnUi(() -> {
+        SettingsManager.readWidget(SettingsManager.GENERATED_SCALE, appWidgetId, 5f, value -> runOnUi(() -> {
             if (scale != null) {
                 scale.setValue(Math.round(value));
             }
         }));
-        SettingsManager.read(SettingsManager.GENERATED_OCTAVES, 4, value -> runOnUi(() -> {
+        SettingsManager.readWidget(SettingsManager.GENERATED_OCTAVES, appWidgetId, 4, value -> runOnUi(() -> {
             if (octaves != null) {
                 octaves.setValue(value);
             }
         }));
-        SettingsManager.read(SettingsManager.GENERATED_SPEED, 1, value -> runOnUi(() -> {
+        SettingsManager.readWidget(SettingsManager.GENERATED_SPEED, appWidgetId, 1, value -> runOnUi(() -> {
             if (speed != null) {
                 speed.setValue(value);
             }
         }));
-        SettingsManager.read(SettingsManager.GENERATED_PALETTE, 0, value -> runOnUi(() -> {
+        SettingsManager.readWidget(SettingsManager.GENERATED_PALETTE, appWidgetId, 0, value -> runOnUi(() -> {
             if (palette != null) {
                 palette.setValue(String.valueOf(value));
             }
         }));
-        SettingsManager.read(SettingsManager.GENERATED_ALGORITHM, 0, value -> runOnUi(() -> {
+        SettingsManager.readWidget(SettingsManager.GENERATED_ALGORITHM, appWidgetId, 0, value -> runOnUi(() -> {
             if (algorithm != null) {
                 algorithm.setValue(String.valueOf(value));
             }
         }));
-        SettingsManager.read(SettingsManager.GENERATED_RANDOM, false, value -> runOnUi(() -> {
+        SettingsManager.readWidget(SettingsManager.GENERATED_RANDOM, appWidgetId, false, value -> runOnUi(() -> {
             if (random != null) {
                 random.setChecked(value);
             }
@@ -148,10 +151,10 @@ public class GenPreference extends PreferenceFragmentCompat {
     }
 
     private void refreshWidgets() {
-        WidgetProviderGen.update(requireContext());
+        WidgetProviderGen.update(requireContext(), appWidgetId);
     }
 
     private void refreshWidgetsWithCurrentSettings() {
-        WidgetProviderGen.updateWithCurrentSettings(requireContext());
+        WidgetProviderGen.updateWithCurrentSettings(requireContext(), appWidgetId);
     }
 }

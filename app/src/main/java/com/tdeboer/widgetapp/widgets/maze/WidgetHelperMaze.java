@@ -61,7 +61,7 @@ final class WidgetHelperMaze {
         // launchers may apply an update on top of the views they already show, so clear the old frames
         views.removeAllViews(R.id.widget_maze_flipper);
 
-        Integer savedTheme = SettingsManager.readsync(SettingsManager.MAZE_THEME);
+        Integer savedTheme = SettingsManager.readsyncWidget(SettingsManager.MAZE_THEME, appWidgetId);
         int theme = savedTheme != null ? savedTheme : 0;
         int textColor = MazeRenderer.textColor(theme);
         views.setInt(R.id.widget_maze, "setBackgroundColor", MazeRenderer.backgroundColor(theme));

@@ -55,6 +55,17 @@ public class SettingsManager {
     public static final Preferences.Key<Integer> APPEARANCE = PreferencesKeys.intKey("APPEARANCE");
     public static final Preferences.Key<Integer> ACCENT_COLOR = PreferencesKeys.intKey("ACCENT_COLOR");
 
+    private static final String WIDGET_KEY_PREFIX = "WIDGET_";
+
+//    every widget can have its own value for a setting. the settings above are the starting point for widgets
+//    without their own value, so existing widgets keep their look and new widgets start from those settings.
+//    the name is all that identifies a key, the stored value keeps its own type
+    @SuppressWarnings("unchecked")
+    public static <T> Preferences.Key<T> widgetKey(Preferences.Key<T> key, int appWidgetId) {
+        return (Preferences.Key<T>) (Preferences.Key<?>) PreferencesKeys.stringKey(
+                WIDGET_KEY_PREFIX + appWidgetId + "_" + key.getName());
+    }
+
 //    every maze widget has its own maze, so these fields exist per widget
     public static Preferences.Key<Long> mazeSeedKey(int appWidgetId) {
         return PreferencesKeys.longKey("MAZE_SEED_" + appWidgetId);
@@ -115,15 +126,15 @@ public class SettingsManager {
     }
 
 //    writes all generated widget look settings at once, so nobody reads a half-updated set
-    public static void writeGeneratedSettings(float scale, int octaves, int speed, int palette, int algorithm,
-                                              Runnable callback) {
+    public static void writeGeneratedSettings(int appWidgetId, float scale, int octaves, int speed, int palette,
+                                              int algorithm, Runnable callback) {
         ListenableFuture<Preferences> future = getDataStore().updateDataAsync(preferences -> {
             MutablePreferences mutablePreferences = preferences.toMutablePreferences();
-            mutablePreferences.set(GENERATED_SCALE, scale);
-            mutablePreferences.set(GENERATED_OCTAVES, octaves);
-            mutablePreferences.set(GENERATED_SPEED, speed);
-            mutablePreferences.set(GENERATED_PALETTE, palette);
-            mutablePreferences.set(GENERATED_ALGORITHM, algorithm);
+            mutablePreferences.set(widgetKey(GENERATED_SCALE, appWidgetId), scale);
+            mutablePreferences.set(widgetKey(GENERATED_OCTAVES, appWidgetId), octaves);
+            mutablePreferences.set(widgetKey(GENERATED_SPEED, appWidgetId), speed);
+            mutablePreferences.set(widgetKey(GENERATED_PALETTE, appWidgetId), palette);
+            mutablePreferences.set(widgetKey(GENERATED_ALGORITHM, appWidgetId), algorithm);
             return mutablePreferences;
         });
         Futures.addCallback(future, new FutureCallback<Preferences>() {
@@ -162,6 +173,28 @@ public class SettingsManager {
         }, executor);
     }
 
+//    removes everything that was saved for one widget
+    public static void removeWidgetSettings(int appWidgetId) {
+        removeKeysStartingWith(WIDGET_KEY_PREFIX + appWidgetId + "_");
+    }
+
+//    removes everything that was saved for any widget
+    public static void removeAllWidgetSettings() {
+        removeKeysStartingWith(WIDGET_KEY_PREFIX);
+    }
+
+    private static void removeKeysStartingWith(String prefix) {
+        getDataStore().updateDataAsync(preferences -> {
+            MutablePreferences mutablePreferences = preferences.toMutablePreferences();
+            for (Preferences.Key<?> key : preferences.asMap().keySet()) {
+                if (key.getName().startsWith(prefix)) {
+                    mutablePreferences.remove(key);
+                }
+            }
+            return mutablePreferences;
+        });
+    }
+
 //    callback interface because read method is async
     public interface Callback<T> {
         void onResult(T value);
@@ -185,8 +218,43 @@ public class SettingsManager {
         }, executor);
     }
 
-    public static String readsyncImages() {
-        return readsync(UPLOADEDIMAGES);
+//    the value of this widget, or else the shared value, or else the defaultValue
+    public static <T> void readWidget(Preferences.Key<T> key, int appWidgetId, T defaultValue, Callback<T> callback) {
+        ListenableFuture<Preferences> future = getDataStore().getDataAsync();
+        Futures.addCallback(future, new FutureCallback<Preferences>() {
+            @Override
+            public void onSuccess(Preferences preferences) {
+                T value = widgetValue(preferences, key, appWidgetId);
+                callback.onResult(value != null ? value : defaultValue);
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                callback.onResult(defaultValue);
+            }
+        }, executor);
+    }
+
+    public static <T> void writeWidget(Preferences.Key<T> key, int appWidgetId, T value, Callback<T> callback) {
+        write(widgetKey(key, appWidgetId), value, callback);
+    }
+
+    public static <T> T readsyncWidget(Preferences.Key<T> key, int appWidgetId) {
+        ListenableFuture<Preferences> future = getDataStore().getDataAsync();
+        try {
+            return widgetValue(future.get(), key, appWidgetId);
+        } catch (ExecutionException | InterruptedException e) {
+            return null;
+        }
+    }
+
+    private static <T> T widgetValue(Preferences preferences, Preferences.Key<T> key, int appWidgetId) {
+        T value = preferences.get(widgetKey(key, appWidgetId));
+        return value != null ? value : preferences.get(key);
+    }
+
+    public static String readsyncImages(int appWidgetId) {
+        return readsyncWidget(UPLOADEDIMAGES, appWidgetId);
     }
 
     public static String readsyncGeneratedImages() {

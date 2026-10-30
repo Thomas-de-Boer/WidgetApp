@@ -21,12 +21,12 @@ public class WidgetHelperQuotes {
     private static final Gson GSON = new Gson();
     private static final Random RANDOM = new Random();
 
-    public static void makeView(Context context, WidgetProviderQuotes.Callback<RemoteViews> callback) {
-        SettingsManager.read(SettingsManager.QUOTEANDFACT, 0.5f, weight -> {
-            SettingsManager.read(SettingsManager.QUOTE_AVOID_REPEATS, false, avoidRepeats -> {
-                SettingsManager.read(SettingsManager.QUOTE_HISTORY, "[]", quoteHistoryJson -> {
-                    SettingsManager.read(SettingsManager.FACT_HISTORY, "[]", factHistoryJson -> {
-                        makeViewWithContent(context, callback, weight, avoidRepeats,
+    public static void makeView(Context context, int appWidgetId, WidgetProviderQuotes.Callback<RemoteViews> callback) {
+        SettingsManager.readWidget(SettingsManager.QUOTEANDFACT, appWidgetId, 0.5f, weight -> {
+            SettingsManager.readWidget(SettingsManager.QUOTE_AVOID_REPEATS, appWidgetId, false, avoidRepeats -> {
+                SettingsManager.readWidget(SettingsManager.QUOTE_HISTORY, appWidgetId, "[]", quoteHistoryJson -> {
+                    SettingsManager.readWidget(SettingsManager.FACT_HISTORY, appWidgetId, "[]", factHistoryJson -> {
+                        makeViewWithContent(context, appWidgetId, callback, weight, avoidRepeats,
                                 SettingsManager.deserializeString(quoteHistoryJson),
                                 SettingsManager.deserializeString(factHistoryJson));
                     });
@@ -35,7 +35,8 @@ public class WidgetHelperQuotes {
         });
     }
 
-    private static void makeViewWithContent(Context context, WidgetProviderQuotes.Callback<RemoteViews> callback,
+    private static void makeViewWithContent(Context context, int appWidgetId,
+                                             WidgetProviderQuotes.Callback<RemoteViews> callback,
                                              float weight, boolean avoidRepeats, List<String> quoteHistory,
                                              List<String> factHistory) {
         String[] quotes = context.getResources().getStringArray(R.array.quotes);
@@ -47,8 +48,9 @@ public class WidgetHelperQuotes {
 
         if (avoidRepeats) {
             history.add(chosenText);
-            SettingsManager.write(
+            SettingsManager.writeWidget(
                     fact ? SettingsManager.FACT_HISTORY : SettingsManager.QUOTE_HISTORY,
+                    appWidgetId,
                     GSON.toJson(history),
                     ignored -> applyView(context, callback, chosenText, fact)
             );

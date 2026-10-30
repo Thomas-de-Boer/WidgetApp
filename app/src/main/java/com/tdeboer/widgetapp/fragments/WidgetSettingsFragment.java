@@ -31,6 +31,7 @@ import com.tdeboer.widgetapp.recyclers.WidgetItem;
 import java.util.HashMap;
 
 public class WidgetSettingsFragment extends Fragment {
+    public static final String ARGUMENT_WIDGET_ID = "app_widget_id";
 //    same host as WidgetFragment
     private static final int APP_WIDGET_HOST_ID = 67;
     private static final long PREVIEW_DELAY_MILLIS = 1000;
@@ -56,7 +57,7 @@ public class WidgetSettingsFragment extends Fragment {
         WidgetSettingsFragment fragment = new WidgetSettingsFragment();
         Bundle arguments = new Bundle();
         arguments.putString("widget_type", widgetType.name());
-        arguments.putInt("app_widget_id", appWidgetId);
+        arguments.putInt(ARGUMENT_WIDGET_ID, appWidgetId);
         fragment.setArguments(arguments);
         return fragment;
     }
@@ -71,7 +72,7 @@ public class WidgetSettingsFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            appWidgetId = getArguments().getInt("app_widget_id", AppWidgetManager.INVALID_APPWIDGET_ID);
+            appWidgetId = getArguments().getInt(ARGUMENT_WIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
         }
         if (widgetType == null && getArguments() != null) {
             String type = getArguments().getString("widget_type");
@@ -87,6 +88,9 @@ public class WidgetSettingsFragment extends Fragment {
         typeToPreference.put(WidgetItem.widgetTypes.GEN, new GenPreference());
         typeToPreference.put(WidgetItem.widgetTypes.MAZE, new MazePreference());
 
+        Bundle arguments = new Bundle();
+        arguments.putInt(ARGUMENT_WIDGET_ID, appWidgetId);
+        typeToPreference.get(widgetType).setArguments(arguments);
     }
 
     @Nullable

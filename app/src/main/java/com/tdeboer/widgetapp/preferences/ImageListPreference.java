@@ -27,6 +27,8 @@ import com.google.gson.Gson;
 import java.util.List;
 
 public class ImageListPreference extends Preference {
+    private int appWidgetId;
+
     public ImageListPreference(@NonNull Context context) {
         this(context, null);
     }
@@ -45,6 +47,10 @@ public class ImageListPreference extends Preference {
         setLayoutResource(R.layout.images_list_preference);
     }
 
+    public void setAppWidgetId(int appWidgetId) {
+        this.appWidgetId = appWidgetId;
+    }
+
     public void notifyChange() {
         notifyChanged();
     }
@@ -57,7 +63,7 @@ public class ImageListPreference extends Preference {
 
         RecyclerView images_list_preference_recycler = holder.itemView.findViewById(R.id.images_list_preference_recycler);
 
-        List<String> uploadedFileNames = SettingsManager.deserializeString(SettingsManager.readsyncImages());
+        List<String> uploadedFileNames = SettingsManager.deserializeString(SettingsManager.readsyncImages(appWidgetId));
 
         holder.itemView.findViewById(R.id.images_list_preference_empty)
                 .setVisibility(uploadedFileNames.isEmpty() ? View.VISIBLE : View.GONE);
@@ -81,7 +87,7 @@ public class ImageListPreference extends Preference {
 
         Gson gson = new Gson();
 
-        SettingsManager.write(SettingsManager.UPLOADEDIMAGES, gson.toJson(uploadedFileNames), string -> {
+        SettingsManager.writeWidget(SettingsManager.UPLOADEDIMAGES, appWidgetId, gson.toJson(uploadedFileNames), string -> {
 //            delete only after the list is saved, the settings screen expects every listed file to exist
             if (string != null) {
                 getContext().deleteFile(fileName);
@@ -95,9 +101,7 @@ public class ImageListPreference extends Preference {
                 public void run() {
                     notifyChanged();
 
-                    int[] appWidgetIds = widgetManager.getAppWidgetIds(new ComponentName(getContext(), WidgetProviderImages.class));
-
-                    WidgetProviderImages.update(getContext(), widgetManager, appWidgetIds);
+                    WidgetProviderImages.update(getContext(), widgetManager, new int[]{appWidgetId});
                 }
             };
             mainHandler.post(myRunnable);

@@ -80,6 +80,7 @@ final class MazeImageStore {
             deleteSets(context, appWidgetId, null);
             SettingsManager.resetData(SettingsManager.mazeSeedKey(appWidgetId));
             SettingsManager.resetData(SettingsManager.mazeSolvedKey(appWidgetId));
+            SettingsManager.removeWidgetSettings(appWidgetId);
         });
     }
 
@@ -123,7 +124,7 @@ final class MazeImageStore {
 
     private static void render(Context context, int appWidgetId, long seed, Runnable onReady) {
         String setName = prefix(appWidgetId) + UUID.randomUUID();
-        MazeRenderer renderer = makeRenderer(seed);
+        MazeRenderer renderer = makeRenderer(appWidgetId, seed);
         boolean written = directory(context).exists() || directory(context).mkdirs();
         if (written) {
             written = writeFrames(context, renderer, setName, new int[]{0, renderer.frameCount() - 1});
@@ -140,7 +141,7 @@ final class MazeImageStore {
 
     private static Chunk renderChunk(Context context, int appWidgetId, int chunk) {
         long seed = readSeed(appWidgetId);
-        MazeRenderer renderer = makeRenderer(seed);
+        MazeRenderer renderer = makeRenderer(appWidgetId, seed);
         try {
             int[] numbers = chunkFrames(renderer, chunk);
             List<String> frames = findFrames(context, appWidgetId);
@@ -173,11 +174,11 @@ final class MazeImageStore {
         return numbers;
     }
 
-    private static MazeRenderer makeRenderer(long seed) {
-        int cells = readInt(SettingsManager.MAZE_CELLS, Maze.DEFAULT_CELLS);
-        int style = readInt(SettingsManager.MAZE_STYLE, Maze.STYLE_WINDING);
-        int theme = readInt(SettingsManager.MAZE_THEME, 0);
-        int speed = readInt(SettingsManager.MAZE_SPEED, Maze.DEFAULT_SPEED);
+    private static MazeRenderer makeRenderer(int appWidgetId, long seed) {
+        int cells = readInt(SettingsManager.MAZE_CELLS, appWidgetId, Maze.DEFAULT_CELLS);
+        int style = readInt(SettingsManager.MAZE_STYLE, appWidgetId, Maze.STYLE_WINDING);
+        int theme = readInt(SettingsManager.MAZE_THEME, appWidgetId, 0);
+        int speed = readInt(SettingsManager.MAZE_SPEED, appWidgetId, Maze.DEFAULT_SPEED);
         return new MazeRenderer(new Maze(cells, seed, style), theme, speed);
     }
 
@@ -236,8 +237,8 @@ final class MazeImageStore {
         }
     }
 
-    private static int readInt(Preferences.Key<Integer> key, int defaultValue) {
-        Integer value = SettingsManager.readsync(key);
+    private static int readInt(Preferences.Key<Integer> key, int appWidgetId, int defaultValue) {
+        Integer value = SettingsManager.readsyncWidget(key, appWidgetId);
         return value != null ? value : defaultValue;
     }
 

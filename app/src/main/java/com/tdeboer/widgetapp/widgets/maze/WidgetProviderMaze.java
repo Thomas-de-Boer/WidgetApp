@@ -76,13 +76,15 @@ public class WidgetProviderMaze extends AppWidgetProvider {
         }
     }
 
-    // keeps the current mazes and draws them again with the current theme and speed
-    public static void redraw(Context context) {
+    public static void update(Context context, int appWidgetId) {
+        newMaze(context, AppWidgetManager.getInstance(context), appWidgetId);
+    }
+
+    // keeps the current maze and draws it again with the current theme and speed
+    public static void redraw(Context context, int appWidgetId) {
         AppWidgetManager manager = AppWidgetManager.getInstance(context);
-        for (int appWidgetId : allWidgetIds(context, manager)) {
-            ACTIVE_SOLVES.remove(appWidgetId);
-            MazeImageStore.redraw(context, appWidgetId, () -> showStill(context, manager, appWidgetId));
-        }
+        ACTIVE_SOLVES.remove(appWidgetId);
+        MazeImageStore.redraw(context, appWidgetId, () -> showStill(context, manager, appWidgetId));
     }
 
     private static void newMaze(Context context, AppWidgetManager manager, int appWidgetId) {

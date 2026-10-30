@@ -3,8 +3,15 @@ package com.tdeboer.widgetapp.preferences;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Context;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
+import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.FragmentActivity;
 import androidx.preference.ListPreference;
@@ -14,6 +21,7 @@ import androidx.preference.PreferenceFragmentCompat;
 import com.google.android.material.color.DynamicColors;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.tdeboer.widgetapp.AppTheme;
+import com.tdeboer.widgetapp.DataBackup;
 import com.tdeboer.widgetapp.R;
 import com.tdeboer.widgetapp.SettingsManager;
 import com.tdeboer.widgetapp.widgets.gen.GeneratedImageStore;
@@ -21,8 +29,27 @@ import com.tdeboer.widgetapp.widgets.image.WidgetHelperImages;
 import com.tdeboer.widgetapp.widgets.image.WidgetProviderImages;
 import com.tdeboer.widgetapp.widgets.maze.WidgetProviderMaze;
 
+import java.io.IOException;
+import java.time.LocalDate;
+
 public class MainPreference extends PreferenceFragmentCompat {
+    private static final String[] BACKUP_TYPES = {"application/zip", "application/x-zip-compressed", "application/octet-stream"};
+
     private ListPreference appearance;
+
+    private final ActivityResultLauncher<String> exportLauncher = registerForActivityResult(
+            new ActivityResultContracts.CreateDocument("application/zip"), uri -> {
+                if (uri != null) {
+                    exportData(uri);
+                }
+            });
+
+    private final ActivityResultLauncher<String[]> importLauncher = registerForActivityResult(
+            new ActivityResultContracts.OpenDocument(), uri -> {
+                if (uri != null) {
+                    importData(uri);
+                }
+            });
 
     @Override
     public void onCreatePreferences(@Nullable Bundle savedInstanceState, @Nullable String rootKey) {
@@ -31,6 +58,25 @@ public class MainPreference extends PreferenceFragmentCompat {
         appearance = findPreference("appearance");
         Preference accent = findPreference("accent_color");
         Preference reset = findPreference("reset_data");
+        Preference exportData = findPreference("export_data");
+        Preference importData = findPreference("import_data");
+
+        assert exportData != null;
+        exportData.setOnPreferenceClickListener(preference -> {
+            exportLauncher.launch(getString(R.string.backup_file_name, LocalDate.now()));
+            return false;
+        });
+
+        assert importData != null;
+        importData.setOnPreferenceClickListener(preference -> {
+            new MaterialAlertDialogBuilder(requireContext())
+                    .setTitle(R.string.import_confirm_title)
+                    .setMessage(R.string.import_confirm_message)
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .setPositiveButton(R.string.import_confirm_button, (dialog, which) -> importLauncher.launch(BACKUP_TYPES))
+                    .show();
+            return false;
+        });
 
         assert appearance != null;
         appearance.setOnPreferenceChangeListener((preference, value) -> {
@@ -69,9 +115,49 @@ public class MainPreference extends PreferenceFragmentCompat {
                 runOnUi(() -> appearance.setValue(String.valueOf(value))));
     }
 
+    private void exportData(Uri uri) {
+        Context context = requireContext().getApplicationContext();
+        Toast.makeText(context, R.string.export_busy, Toast.LENGTH_SHORT).show();
+
+//        a background thread, because the backup waits for the files and settings
+        new Thread(() -> {
+            try {
+                DataBackup.exportTo(context, uri);
+                showResult(context, R.string.export_done);
+            } catch (IOException | RuntimeException e) {
+                Log.w("MainPreference", "Export failed", e);
+                showResult(context, R.string.export_failed);
+            }
+        }).start();
+    }
+
+    private void importData(Uri uri) {
+        Context context = requireContext().getApplicationContext();
+        Toast.makeText(context, R.string.import_busy, Toast.LENGTH_SHORT).show();
+
+        new Thread(() -> {
+            try {
+                DataBackup.importFrom(context, uri);
+                showResult(context, R.string.import_done);
+                runOnUi(() -> {
+                    AppTheme.applySavedAppearance();
+                    requireActivity().recreate();
+                });
+            } catch (IOException e) {
+                Log.w("MainPreference", "Import failed", e);
+                showResult(context, R.string.import_failed);
+            }
+        }).start();
+    }
+
+    private void showResult(Context context, int message) {
+        new Handler(Looper.getMainLooper()).post(() -> Toast.makeText(context, message, Toast.LENGTH_LONG).show());
+    }
+
     private void resetData() {
         Context context = requireContext().getApplicationContext();
 
+        SettingsManager.removeAllWidgetSettings();
         SettingsManager.resetData(SettingsManager.QUOTEANDFACT);
         SettingsManager.write(SettingsManager.UPLOADEDIMAGES, "[]", string -> {
             if (string != null) {

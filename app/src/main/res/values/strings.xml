@@ -39,6 +39,16 @@
     <string name="reset_confirm_button">Reset</string>
     <string name="image_delete_confirm_title">Delete this image?</string>
     <string name="image_delete_confirm_message">It will be removed from the widget. Your original photo stays in your gallery.</string>
+    <string name="backup_file_name">widget-app-backup-%1$s.zip</string>
+    <string name="export_busy">Exporting your data…</string>
+    <string name="export_done">Your data is exported</string>
+    <string name="export_failed">Your data could not be exported</string>
+    <string name="import_confirm_title">Import this backup?</string>
+    <string name="import_confirm_message">This replaces all your settings and uploaded images with the ones in the backup file. Your current data can’t be restored unless you export it first.</string>
+    <string name="import_confirm_button">Choose file</string>
+    <string name="import_busy">Importing your data…</string>
+    <string name="import_done">Your data is imported</string>
+    <string name="import_failed">This file could not be imported. Your data has not been changed.</string>
     <string name="accent_title">Accent color</string>
     <string name="accent_wallpaper">Follow wallpaper</string>
     <string name="accent_swatches">Colors</string>

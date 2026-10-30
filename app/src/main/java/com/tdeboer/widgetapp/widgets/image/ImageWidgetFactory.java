@@ -19,10 +19,12 @@ import java.util.List;
 
 public class ImageWidgetFactory implements RemoteViewsService.RemoteViewsFactory {
     Context context;
+    int appWidgetId;
     List<String> uploadedFileNames;
 
-    public ImageWidgetFactory(Context context) {
+    public ImageWidgetFactory(Context context, int appWidgetId) {
         this.context = context;
+        this.appWidgetId = appWidgetId;
     }
 
     @Override
@@ -91,12 +93,12 @@ public class ImageWidgetFactory implements RemoteViewsService.RemoteViewsFactory
 
     @Override
     public void onCreate() {
-        uploadedFileNames = SettingsManager.deserializeString(SettingsManager.readsyncImages());
+        uploadedFileNames = SettingsManager.deserializeString(SettingsManager.readsyncImages(appWidgetId));
     }
 
     @Override
     public void onDataSetChanged() {
-        uploadedFileNames = SettingsManager.deserializeString(SettingsManager.readsyncImages());
+        uploadedFileNames = SettingsManager.deserializeString(SettingsManager.readsyncImages(appWidgetId));
 //        SettingsManager.read(SettingsManager.UPLOADEDIMAGES, null, string -> {
 //            uploadedFileNames = SettingsManager.deserializeString(string);
 //        });

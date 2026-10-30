@@ -29,6 +29,9 @@
             android:permission="android.permission.BIND_REMOTEVIEWS">
 
         </service>
+        <service
+            android:name=".widgets.gen.GenerationJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
         <provider
             android:name=".widgets.gen.GeneratedImageProvider"
             android:authorities="${applicationId}.generated"

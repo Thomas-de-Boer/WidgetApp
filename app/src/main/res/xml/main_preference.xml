@@ -29,6 +29,20 @@
         app:iconSpaceReserved="false">
 
         <Preference
+            app:key="export_data"
+            app:title="Export your data"
+            app:summary="Save your settings and uploaded images in a backup file"
+            app:iconSpaceReserved="false"
+            />
+
+        <Preference
+            app:key="import_data"
+            app:title="Import your data"
+            app:summary="Replace your settings and uploaded images with a backup file"
+            app:iconSpaceReserved="false"
+            />
+
+        <Preference
             app:key="reset_data"
             app:title="Reset your data"
             app:summary="This will remove all your settings and uploaded images"

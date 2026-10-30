@@ -12,9 +12,10 @@ import android.os.PowerManager;
 
 import com.tdeboer.widgetapp.SettingsManager;
 
-import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class WidgetProviderGen extends AppWidgetProvider {
     private static final String ACTION_ROTATE_GENERATED = "com.tdeboer.widgetapp.ROTATE_GENERATED";
@@ -22,8 +23,20 @@ public class WidgetProviderGen extends AppWidgetProvider {
     // a non-wakeup alarm: it only fires while the phone is awake anyway, so it never wakes it up just for the widget
     private static final long ROTATION_PERIOD_MILLIS = 30 * 60 * 1000L;
     private static final long RETRY_PERIOD_MILLIS = 60 * 1000L;
-    private static final AtomicBoolean GENERATION_IN_PROGRESS = new AtomicBoolean();
+    // the widgets that are being generated, and those that changed meanwhile and need another round
+    private static final Set<Integer> GENERATING = ConcurrentHashMap.newKeySet();
+    private static final Map<Integer, NextRound> WAITING = new ConcurrentHashMap<>();
     private static volatile Runnable settingsRandomizedListener;
+
+    private static final class NextRound {
+        final boolean randomize;
+        final Runnable onFinished;
+
+        NextRound(boolean randomize, Runnable onFinished) {
+            this.randomize = randomize;
+            this.onFinished = onFinished;
+        }
+    }
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
@@ -42,32 +55,54 @@ public class WidgetProviderGen extends AppWidgetProvider {
         }
     }
 
-    public static void update(Context context) {
-        updateWidgets(context, AppWidgetManager.getInstance(context), true);
+    public static void update(Context context, int appWidgetId) {
+        GenerationJobService.schedule(context, appWidgetId, true);
     }
 
-    public static void updateWithCurrentSettings(Context context) {
+    public static void updateWithCurrentSettings(Context context, int appWidgetId) {
+        GenerationJobService.schedule(context, appWidgetId, false);
+    }
+
+    public static void updateAllWithCurrentSettings(Context context) {
         updateWidgets(context, AppWidgetManager.getInstance(context), false);
+    }
+
+    // called by the job, onFinished runs when the frames of the widget are ready
+    static void generateNow(Context context, int appWidgetId, boolean randomize, Runnable onFinished) {
+        updateWidget(context, AppWidgetManager.getInstance(context), appWidgetId, randomize, onFinished);
     }
 
     public static void setSettingsRandomizedListener(Runnable listener) {
         settingsRandomizedListener = listener;
     }
 
-    private static void updateWidgets(Context context, AppWidgetManager manager,
-                                      boolean randomize) {
-        SettingsManager.read(SettingsManager.GENERATED_SCALE, 5f, scale ->
-                SettingsManager.read(SettingsManager.GENERATED_OCTAVES, 4, octaves ->
-                        SettingsManager.read(SettingsManager.GENERATED_PALETTE, 0, palette ->
-                                SettingsManager.read(SettingsManager.GENERATED_ALGORITHM, 0, algorithm ->
-                                SettingsManager.read(SettingsManager.GENERATED_SPEED, 1, speed ->
-                                SettingsManager.read(SettingsManager.GENERATED_RANDOM, false, randomEnabled ->
-                                SettingsManager.read(SettingsManager.GENERATED_IMAGES, null, imageJson -> {
-                                            if (isThermalBusy(context) || !GENERATION_IN_PROGRESS.compareAndSet(false, true)) {
+    private static void updateWidgets(Context context, AppWidgetManager manager, boolean randomize) {
+        for (int appWidgetId : allWidgetIds(context, manager)) {
+            GenerationJobService.schedule(context, appWidgetId, randomize);
+        }
+    }
+
+    private static void updateWidget(Context context, AppWidgetManager manager, int appWidgetId, boolean randomize,
+                                     Runnable onFinished) {
+        SettingsManager.readWidget(SettingsManager.GENERATED_SCALE, appWidgetId, 5f, scale ->
+                SettingsManager.readWidget(SettingsManager.GENERATED_OCTAVES, appWidgetId, 4, octaves ->
+                        SettingsManager.readWidget(SettingsManager.GENERATED_PALETTE, appWidgetId, 0, palette ->
+                                SettingsManager.readWidget(SettingsManager.GENERATED_ALGORITHM, appWidgetId, 0, algorithm ->
+                                SettingsManager.readWidget(SettingsManager.GENERATED_SPEED, appWidgetId, 1, speed ->
+                                SettingsManager.readWidget(SettingsManager.GENERATED_RANDOM, appWidgetId, false, randomEnabled -> {
+                                            if (isThermalBusy(context)) {
                                                 scheduleRetry(context);
+                                                onFinished.run();
                                                 return;
                                             }
-                                            List<String> oldFiles = SettingsManager.deserializeString(imageJson);
+                                            if (!GENERATING.add(appWidgetId)) {
+                                                // this job stays open, a replaced job can't keep the app awake anymore
+                                                NextRound replaced = WAITING.put(appWidgetId, new NextRound(randomize, onFinished));
+                                                if (replaced != null) {
+                                                    replaced.onFinished.run();
+                                                }
+                                                return;
+                                            }
                                             if (randomize && randomEnabled) {
                                                 ThreadLocalRandom random = ThreadLocalRandom.current();
                                                 float randomScale = random.nextInt(1, 13);
@@ -75,40 +110,40 @@ public class WidgetProviderGen extends AppWidgetProvider {
                                                 int randomSpeed = random.nextInt(1, 6);
                                                 int randomPalette = random.nextInt(0, 9);
                                                 int randomAlgorithm = random.nextInt(0, 10);
-                                                SettingsManager.writeGeneratedSettings(randomScale, randomOctaves, randomSpeed,
-                                                        randomPalette, randomAlgorithm, () -> {
+                                                SettingsManager.writeGeneratedSettings(appWidgetId, randomScale, randomOctaves,
+                                                        randomSpeed, randomPalette, randomAlgorithm, () -> {
                                                             Runnable listener = settingsRandomizedListener;
                                                             if (listener != null) {
                                                                 listener.run();
                                                             }
-                                                            generate(context, manager, randomScale, randomOctaves,
-                                                                    randomPalette, randomAlgorithm, randomSpeed, oldFiles);
+                                                            generate(context, manager, appWidgetId, randomScale, randomOctaves,
+                                                                    randomPalette, randomAlgorithm, randomSpeed, onFinished);
                                                         });
                                             } else {
-                                                generate(context, manager, scale, octaves, palette, algorithm,
-                                                        speed, oldFiles);
+                                                generate(context, manager, appWidgetId, scale, octaves, palette, algorithm,
+                                                        speed, onFinished);
                                             }
-                                        })))))));
+                                        }))))));
     }
 
-    private static void generate(Context context, AppWidgetManager manager, float scale,
-                                 int octaves, int palette, int algorithm, int speed, List<String> oldFiles) {
+    private static void generate(Context context, AppWidgetManager manager, int appWidgetId, float scale,
+                                 int octaves, int palette, int algorithm, int speed, Runnable onFinished) {
         long generationSeed = ThreadLocalRandom.current().nextLong();
-        GeneratedImageStore.generate(context, scale, octaves, palette, algorithm, speed, generationSeed,
-                oldFiles,
+        GeneratedImageStore.generate(context, appWidgetId, scale, octaves, palette, algorithm, speed, generationSeed,
                 ignored -> {
-                    GENERATION_IN_PROGRESS.set(false);
-                    updateViews(context, manager);
+                    GENERATING.remove(appWidgetId);
+                    updateViews(context, manager, appWidgetId);
+                    NextRound next = WAITING.remove(appWidgetId);
+                    if (next != null) {
+                        updateWidget(context, manager, appWidgetId, next.randomize, next.onFinished);
+                    }
+                    onFinished.run();
                 });
     }
 
-    // every gen widget shows the same frames, so they are always updated together
-    private static void updateViews(Context context, AppWidgetManager manager) {
-        int[] appWidgetIds = allWidgetIds(context, manager);
-        for (int appWidgetId : appWidgetIds) {
-            manager.updateAppWidget(appWidgetId, WidgetHelperGen.makeView(context));
-        }
-        cancelPerWidgetAlarms(context, appWidgetIds);
+    private static void updateViews(Context context, AppWidgetManager manager, int appWidgetId) {
+        manager.updateAppWidget(appWidgetId, WidgetHelperGen.makeView(context, appWidgetId));
+        cancelPerWidgetAlarms(context, new int[]{appWidgetId});
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         alarmManager.cancel(alarmIntent(context, ACTION_RETRY_GENERATED));
         alarmManager.setInexactRepeating(
@@ -166,6 +201,11 @@ public class WidgetProviderGen extends AppWidgetProvider {
     @Override
     public void onDeleted(Context context, int[] appWidgetIds) {
         cancelPerWidgetAlarms(context, appWidgetIds);
+        for (int appWidgetId : appWidgetIds) {
+            WAITING.remove(appWidgetId);
+            GeneratedImageStore.deleteForWidget(context, appWidgetId);
+            SettingsManager.removeWidgetSettings(appWidgetId);
+        }
         super.onDeleted(context, appWidgetIds);
     }
 

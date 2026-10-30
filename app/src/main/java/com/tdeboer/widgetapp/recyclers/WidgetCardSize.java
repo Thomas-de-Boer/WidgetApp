@@ -9,7 +9,7 @@ import android.util.DisplayMetrics;
 // widgets have different shapes, so a card takes its width from the shape the widget has on the homescreen
 public final class WidgetCardSize {
     private static final float DEFAULT_RATIO = 1.75f;
-    private static final float MIN_RATIO = 0.8f;
+    private static final float MIN_RATIO = 0.4f;
     private static final float MAX_RATIO = 2f;
 
     private WidgetCardSize() { }

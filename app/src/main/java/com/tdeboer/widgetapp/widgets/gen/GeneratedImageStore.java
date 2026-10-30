@@ -36,11 +36,11 @@ public final class GeneratedImageStore {
     private GeneratedImageStore() {
     }
 
-    public static void generate(Context context, float scale, int octaves, int palette, int algorithm, int speed, long seed,
-                                List<String> oldFiles,
-                                SettingsManager.Callback<List<String>> callback) {
+    // every widget has its own frames. one thread does the work, so a second widget simply waits for its turn
+    public static void generate(Context context, int appWidgetId, float scale, int octaves, int palette, int algorithm,
+                                int speed, long seed, SettingsManager.Callback<List<String>> callback) {
         GENERATION_EXECUTOR.execute(() -> generateInternal(
-                context, scale, octaves, palette, algorithm, speed, seed, oldFiles, callback
+                context, appWidgetId, scale, octaves, palette, algorithm, speed, seed, callback
         ));
     }
 
@@ -55,8 +55,8 @@ public final class GeneratedImageStore {
         });
     }
 
-    private static void generateInternal(Context context, float scale, int octaves, int palette, int algorithm,
-                                         int speed, long seed, List<String> oldFiles,
+    private static void generateInternal(Context context, int appWidgetId, float scale, int octaves, int palette,
+                                         int algorithm, int speed, long seed,
                                          SettingsManager.Callback<List<String>> callback) {
         File directory = new File(context.getFilesDir(), "generated_widget");
         if (!directory.exists() && !directory.mkdirs()) {
@@ -65,8 +65,8 @@ public final class GeneratedImageStore {
         }
 
         String generationId = UUID.randomUUID().toString();
-        String generatedPrefix = "generated_" + generationId;
-        String stagingPrefix = "staging_" + generationId;
+        String generatedPrefix = generatedPrefix(appWidgetId) + generationId;
+        String stagingPrefix = stagingPrefix(appWidgetId) + generationId;
         List<String> generated = new ArrayList<>();
         List<String> staged = new ArrayList<>();
         long startTime = SystemClock.elapsedRealtime();
@@ -117,8 +117,8 @@ public final class GeneratedImageStore {
                 + (SystemClock.elapsedRealtime() - startTime) + " ms (cpu "
                 + (SystemClock.currentThreadTimeMillis() - startCpuTime) + " ms)");
 
-        SettingsManager.write(SettingsManager.GENERATED_IMAGES, GSON.toJson(generated), ignored -> {
-            deleteFilesExcept(context, generated);
+        SettingsManager.writeWidget(SettingsManager.GENERATED_IMAGES, appWidgetId, GSON.toJson(generated), ignored -> {
+            deleteFilesExcept(context, appWidgetId, generated);
             callback.onResult(generated);
         });
     }
@@ -136,26 +136,22 @@ public final class GeneratedImageStore {
         SettingsManager.resetData(SettingsManager.GENERATED_IMAGES);
     }
 
-    public static void reset(Context context, Runnable callback) {
+    public static void reset(Context context, int appWidgetId, Runnable callback) {
         GENERATION_EXECUTOR.execute(() -> {
-            File directory = new File(context.getFilesDir(), "generated_widget");
-            File[] files = directory.listFiles();
-            if (files != null) {
-                for (File file : files) {
-                    if (file.isFile() && !file.delete()) {
-                        // A later cleanup pass will remove files still being released by the launcher.
-                    }
-                }
-            }
-            SettingsManager.write(SettingsManager.GENERATED_IMAGES, "[]", ignored -> callback.run());
+            deleteFilesExcept(context, appWidgetId, new ArrayList<>());
+            SettingsManager.writeWidget(SettingsManager.GENERATED_IMAGES, appWidgetId, "[]", ignored -> callback.run());
         });
     }
 
-    // the frames of the newest complete animation, in playback order
-    public static List<String> findCurrentFrames(Context context) {
+    public static void deleteForWidget(Context context, int appWidgetId) {
+        GENERATION_EXECUTOR.execute(() -> deleteFilesExcept(context, appWidgetId, new ArrayList<>()));
+    }
+
+    // the frames of the newest complete animation of this widget, in playback order
+    public static List<String> findCurrentFrames(Context context, int appWidgetId) {
         File directory = new File(context.getFilesDir(), "generated_widget");
         File[] imageFiles = directory.listFiles((dir, name) ->
-                name.startsWith("generated_") && name.endsWith(".jpg"));
+                name.startsWith(generatedPrefix(appWidgetId)) && name.endsWith(".jpg"));
         if (imageFiles == null) {
             return new ArrayList<>();
         }
@@ -218,10 +214,12 @@ public final class GeneratedImageStore {
         }
     }
 
-    private static void deleteFilesExcept(Context context, List<String> keepFiles) {
+    // also removes the shared frames from before every widget had its own
+    private static void deleteFilesExcept(Context context, int appWidgetId, List<String> keepFiles) {
         File directory = new File(context.getFilesDir(), "generated_widget");
         File[] files = directory.listFiles((dir, name) ->
-                (name.startsWith("generated_") || name.startsWith("staging_"))
+                (name.startsWith(generatedPrefix(appWidgetId)) || name.startsWith(stagingPrefix(appWidgetId))
+                        || isSharedFrame(name))
                         && name.endsWith(".jpg"));
         if (files == null) {
             return;
@@ -231,5 +229,17 @@ public final class GeneratedImageStore {
                 file.delete();
             }
         }
+    }
+
+    private static boolean isSharedFrame(String name) {
+        return !name.matches("(generated|staging)_\\d+_.*");
+    }
+
+    private static String generatedPrefix(int appWidgetId) {
+        return "generated_" + appWidgetId + "_";
+    }
+
+    private static String stagingPrefix(int appWidgetId) {
+        return "staging_" + appWidgetId + "_";
     }
 }

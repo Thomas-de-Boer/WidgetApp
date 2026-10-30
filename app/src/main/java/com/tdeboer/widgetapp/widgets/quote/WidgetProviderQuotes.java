@@ -4,6 +4,8 @@ import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.Context;
 
+import com.tdeboer.widgetapp.SettingsManager;
+
 public class WidgetProviderQuotes extends AppWidgetProvider {
 
     public interface Callback<RemoteViews> {
@@ -14,20 +16,22 @@ public class WidgetProviderQuotes extends AppWidgetProvider {
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
         super.onUpdate(context, appWidgetManager, appWidgetIds);
 
-        for (int appWidgetId: appWidgetIds) {
-
-            WidgetHelperQuotes.makeView(context, views -> {
-                appWidgetManager.updateAppWidget(appWidgetId, views);
-            });
-
-        }
+        update(context, appWidgetManager, appWidgetIds);
     }
 
     public static void update(Context context, AppWidgetManager manager, int[] appWidgetIds) {
         for (int appWidgetId : appWidgetIds) {
-            WidgetHelperQuotes.makeView(context, views -> {
+            WidgetHelperQuotes.makeView(context, appWidgetId, views -> {
                 manager.updateAppWidget(appWidgetId, views);
             });
         }
+    }
+
+    @Override
+    public void onDeleted(Context context, int[] appWidgetIds) {
+        for (int appWidgetId : appWidgetIds) {
+            SettingsManager.removeWidgetSettings(appWidgetId);
+        }
+        super.onDeleted(context, appWidgetIds);
     }
 }
