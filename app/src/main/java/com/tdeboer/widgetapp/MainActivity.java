@@ -5,6 +5,9 @@ import android.view.View;
 import android.widget.FrameLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 
 import com.tdeboer.widgetapp.fragments.InfoFragment;
@@ -23,6 +26,7 @@ public class MainActivity extends AppCompatActivity implements WidgetSettingsLis
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        AppTheme.applyAccent(this);
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
@@ -32,6 +36,10 @@ public class MainActivity extends AppCompatActivity implements WidgetSettingsLis
 //        handleWidgetIntent(getIntent());
 
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigationView);
+
+//        the app draws behind the system bars, so keep the content out from under them
+        applySystemBarPadding(findViewById(R.id.flFragment), false);
+        applySystemBarPadding(fswFragment, true);
 
         Fragment widgetFragment = new WidgetFragment();
         Fragment settingsFragment = new SettingsFragment();
@@ -56,13 +64,21 @@ public class MainActivity extends AppCompatActivity implements WidgetSettingsLis
     }
 
 
-    public void onWidgetSettingsRequested(WidgetItem.widgetTypes widgetType) {
+    public void onWidgetSettingsRequested(WidgetItem.widgetTypes widgetType, int appWidgetId) {
         getSupportFragmentManager()
                 .beginTransaction()
-                .replace(R.id.fswFragment, WidgetSettingsFragment.newInstance(widgetType))
+                .replace(R.id.fswFragment, WidgetSettingsFragment.newInstance(widgetType, appWidgetId))
                 .commit();
 
         fswFragment.setVisibility(View.VISIBLE);
+    }
+
+    private void applySystemBarPadding(View view, boolean includeBottom) {
+        ViewCompat.setOnApplyWindowInsetsListener(view, (v, windowInsets) -> {
+            Insets bars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(bars.left, bars.top, bars.right, includeBottom ? bars.bottom : 0);
+            return windowInsets;
+        });
     }
 
     private void setCurrentFragment(Fragment fragment) {

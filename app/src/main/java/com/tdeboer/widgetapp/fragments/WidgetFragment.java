@@ -19,6 +19,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.tdeboer.widgetapp.R;
 import com.tdeboer.widgetapp.WidgetSettingsListener;
 import com.tdeboer.widgetapp.recyclers.RecyclerRowAdapter;
@@ -29,7 +30,7 @@ import com.tdeboer.widgetapp.widgets.maze.WidgetProviderMaze;
 import com.tdeboer.widgetapp.widgets.quote.WidgetProviderQuotes;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 public class WidgetFragment extends Fragment {
@@ -42,7 +43,8 @@ public class WidgetFragment extends Fragment {
     FragmentManager fragmentManager;
 
 
-    HashMap<Class<? extends AppWidgetProvider>, WidgetItem.widgetTypes> classAndEnums = new HashMap<>();
+//    linked, so the widgets are always listed in this order
+    LinkedHashMap<Class<? extends AppWidgetProvider>, WidgetItem.widgetTypes> classAndEnums = new LinkedHashMap<>();
     List<WidgetItem> widgetList = new ArrayList<>();
     List<WidgetItem.widgetTypes> widgetTypeList = new ArrayList<>();
 
@@ -51,6 +53,11 @@ public class WidgetFragment extends Fragment {
         classAndEnums.put(WidgetProviderImages.class, WidgetItem.widgetTypes.IMAGES);
         classAndEnums.put(WidgetProviderGen.class, WidgetItem.widgetTypes.GEN);
         classAndEnums.put(WidgetProviderMaze.class, WidgetItem.widgetTypes.MAZE);
+    }
+
+    private void showTutorial() {
+        BottomNavigationView navigation = requireActivity().findViewById(R.id.bottomNavigationView);
+        navigation.setSelectedItemId(R.id.info);
     }
 
 
@@ -77,6 +84,7 @@ public class WidgetFragment extends Fragment {
 
         text = view.findViewById(R.id.fragment_widgets_text);
         recyclerView = view.findViewById(R.id.fragment_widgets_recyclerview);
+        view.findViewById(R.id.fragment_widgets_how_to).setOnClickListener(v -> showTutorial());
 
 //        start listening for widget updates
         appWidgetHost.startListening();
@@ -140,10 +148,11 @@ public class WidgetFragment extends Fragment {
     }
 
     public void checkListFilled(RecyclerRowAdapter adapter, View text) {
-        if (adapter.getItemCount() != 0) {
-            text.setVisibility(View.INVISIBLE);
-        }
-        else { text.setVisibility(View.VISIBLE); }
+        boolean filled = adapter.getItemCount() != 0;
+
+//        gone instead of invisible, an empty list on top would block the button below it
+        text.setVisibility(filled ? View.GONE : View.VISIBLE);
+        recyclerView.setVisibility(filled ? View.VISIBLE : View.GONE);
     }
 
     public List<WidgetItem.widgetTypes> buildWidgetTypeList(List<WidgetItem> widgetList) {

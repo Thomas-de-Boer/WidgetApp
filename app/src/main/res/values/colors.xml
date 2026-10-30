@@ -6,12 +6,27 @@
     <color name="transparent">#00FFFFFF</color>
 
 
-    <color name="info_icon">#007BFF</color>
+    <!-- the indigo theme, used when colors from the wallpaper are not available -->
+    <color name="app_primary">#4C51BF</color>
+    <color name="app_on_primary">#FFFFFF</color>
+    <color name="app_primary_container">#E1E0FF</color>
+    <color name="app_on_primary_container">#05006C</color>
+    <color name="app_secondary">#5C5D72</color>
+    <color name="app_on_secondary">#FFFFFF</color>
+    <color name="app_secondary_container">#E1E0F9</color>
+    <color name="app_on_secondary_container">#191A2C</color>
+    <color name="app_tertiary">#78536B</color>
+    <color name="app_on_tertiary">#FFFFFF</color>
+    <color name="app_surface">#FBF8FF</color>
+    <color name="app_on_surface">#1B1B21</color>
+    <color name="app_surface_variant">#E4E1EC</color>
+    <color name="app_on_surface_variant">#47464F</color>
+    <color name="app_outline">#777680</color>
 
-
-<!--    <color name="colorPrimary">#FF1100</color>-->
-<!--    <color name="colorPrimaryDark">#2b00FF</color>-->
-<!--    <color name="colorAccent">#2b00FF</color>-->
+    <color name="icon_background">#3F43A8</color>
+    <color name="icon_background_end">#23255F</color>
+    <color name="icon_walls">#FFFFFF</color>
+    <color name="icon_path">#FFC24B</color>
 
     <color name="background_dark">#2b00FF</color>
     <color name="background_fact">#000000</color>

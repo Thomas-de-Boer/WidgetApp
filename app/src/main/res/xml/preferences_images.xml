@@ -6,12 +6,14 @@
     <Preference
         app:key="upload_image"
         app:title="Upload an image"
-        app:summary="Uploaded images wil appear in the image widget"
+        app:summary="Uploaded images will appear in the image widget"
+        app:iconSpaceReserved="false"
         />
 
     <com.tdeboer.widgetapp.preferences.ImageListPreference
         app:key="uploaded_images"
         app:title="Uploaded images"
+        app:iconSpaceReserved="false"
         />
 
 </PreferenceScreen>

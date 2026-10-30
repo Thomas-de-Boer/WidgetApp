@@ -64,7 +64,11 @@ public class RecyclerItemAdapter extends RecyclerView.Adapter<RecyclerItemAdapte
         viewHolder.widget_item_widget_view.removeAllViews();
         viewHolder.widget_item_widget_view.addView(view);
 
-        viewHolder.widget_item_overlay.setOnClickListener(v -> listener.onWidgetSettingsRequested(widgetItem.get_type()));
+        ViewGroup.LayoutParams params = viewHolder.itemView.getLayoutParams();
+        params.width = WidgetCardSize.width(context, appWidgetManager, widgetItem.get_id(), params.height);
+        viewHolder.itemView.setLayoutParams(params);
+
+        viewHolder.widget_item_overlay.setOnClickListener(v -> listener.onWidgetSettingsRequested(widgetItem.get_type(), widgetItem.get_id()));
     }
 
     @Override

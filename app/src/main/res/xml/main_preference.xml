@@ -2,17 +2,38 @@
 <PreferenceScreen
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <Preference
-        app:key="light_dark"
-        app:title="Light / Dark"
-        app:summary="Switch between light and dark mode"
-        />
+    <PreferenceCategory
+        app:title="Look"
+        app:iconSpaceReserved="false">
 
-    <Preference
-        app:key="reset_data"
-        app:title="Reset your data"
-        app:summary="This wil reset all the settings you have changed in the app"
-        />
+        <ListPreference
+            app:key="appearance"
+            app:title="Appearance"
+            app:entries="@array/appearance_names"
+            app:entryValues="@array/appearance_values"
+            app:defaultValue="0"
+            app:useSimpleSummaryProvider="true"
+            app:iconSpaceReserved="false"
+            />
 
+        <Preference
+            app:key="accent_color"
+            app:title="Accent color"
+            app:summary="Follow your wallpaper or pick your own color"
+            app:iconSpaceReserved="false"
+            />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="Data"
+        app:iconSpaceReserved="false">
+
+        <Preference
+            app:key="reset_data"
+            app:title="Reset your data"
+            app:summary="This will remove all your settings and uploaded images"
+            app:iconSpaceReserved="false"
+            />
+    </PreferenceCategory>
 
 </PreferenceScreen>

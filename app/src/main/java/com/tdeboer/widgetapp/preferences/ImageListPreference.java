@@ -17,6 +17,7 @@ import androidx.preference.PreferenceViewHolder;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.tdeboer.widgetapp.R;
 import com.tdeboer.widgetapp.SettingsManager;
 import com.tdeboer.widgetapp.recyclers.ImageListAdapter;
@@ -58,37 +59,48 @@ public class ImageListPreference extends Preference {
 
         List<String> uploadedFileNames = SettingsManager.deserializeString(SettingsManager.readsyncImages());
 
+        holder.itemView.findViewById(R.id.images_list_preference_empty)
+                .setVisibility(uploadedFileNames.isEmpty() ? View.VISIBLE : View.GONE);
+
         GridLayoutManager gridLayoutManager = new GridLayoutManager(getContext(), 3);
 
         images_list_preference_recycler.setLayoutManager(gridLayoutManager);
 
-        images_list_preference_recycler.setAdapter(new ImageListAdapter(getContext(), uploadedFileNames, s -> {
-            uploadedFileNames.remove(s);
+        images_list_preference_recycler.setAdapter(new ImageListAdapter(getContext(), uploadedFileNames, s ->
+                new MaterialAlertDialogBuilder(getContext())
+                        .setTitle(R.string.image_delete_confirm_title)
+                        .setMessage(R.string.image_delete_confirm_message)
+                        .setNegativeButton(android.R.string.cancel, null)
+                        .setPositiveButton(R.string.delete, (dialog, which) -> deleteImage(s, uploadedFileNames, widgetManager))
+                        .show()));
 
-            Gson gson = new Gson();
+    }
 
-            SettingsManager.write(SettingsManager.UPLOADEDIMAGES, gson.toJson(uploadedFileNames), string -> {
-//                delete only after the list is saved, the settings screen expects every listed file to exist
-                if (string != null) {
-                    getContext().deleteFile(s);
+    private void deleteImage(String fileName, List<String> uploadedFileNames, AppWidgetManager widgetManager) {
+        uploadedFileNames.remove(fileName);
+
+        Gson gson = new Gson();
+
+        SettingsManager.write(SettingsManager.UPLOADEDIMAGES, gson.toJson(uploadedFileNames), string -> {
+//            delete only after the list is saved, the settings screen expects every listed file to exist
+            if (string != null) {
+                getContext().deleteFile(fileName);
+            }
+
+            Handler mainHandler = new Handler(getContext().getMainLooper());
+
+            Runnable myRunnable = new Runnable() {
+                @Override
+
+                public void run() {
+                    notifyChanged();
+
+                    int[] appWidgetIds = widgetManager.getAppWidgetIds(new ComponentName(getContext(), WidgetProviderImages.class));
+
+                    WidgetProviderImages.update(getContext(), widgetManager, appWidgetIds);
                 }
-
-                Handler mainHandler = new Handler(getContext().getMainLooper());
-
-                Runnable myRunnable = new Runnable() {
-                    @Override
-
-                    public void run() {
-                        notifyChanged();
-
-                        int[] appWidgetIds = widgetManager.getAppWidgetIds(new ComponentName(getContext(), WidgetProviderImages.class));
-
-                        WidgetProviderImages.update(getContext(), widgetManager, appWidgetIds);
-                    }
-                };
-                mainHandler.post(myRunnable);
-            });
-        }));
-
+            };
+            mainHandler.post(myRunnable);
+        });
     }
 }

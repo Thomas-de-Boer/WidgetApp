@@ -4,11 +4,14 @@
     <string name="menu_widgets">Widgets</string>
     <string name="menu_info">Info</string>
 
-    <string name="fragment_widget_empty">Add a widget to your homescreen and edit the settings here afterward!\n\n If you don’t know how then take a look at the info screen.</string>
+    <string name="fragment_widget_empty">Add a widget to your home screen and it will show up here, ready to customize.</string>
+    <string name="fragment_widget_how_to">Show me how</string>
+    <string name="fragment_widget_available">Available widgets</string>
+    <string name="back">Back</string>
 
     <string name="fragment_info_tutorial_title">How do I add a widget to my homescreen?</string>
-    <string name="fragment_info_tutorial_body">1. Touch and hold an empty area on your home screen until a menu appears.\n 2. Look for "Widgets" in that menu.\n 3. Find Widget App in the list, then touch and hold the widget you want.\n 4. Drag it to the spot on your home screen where you want it, and release.</string>
-    <string name="fragment_info_tutorial_disclaimer">Steps can vary slightly depending on your phone brand. If this doesn’t quite match your device, search online for "how to add a widget on [your phone brand]" for exact instructions.</string>
+    <string name="fragment_info_tutorial_body">1. Touch and hold an empty area on your home screen until a menu appears.\n2. Look for \"Widgets\" in that menu.\n3. Find Widget App in the list, then touch and hold the widget you want.\n4. Drag it to the spot on your home screen where you want it, and release.</string>
+    <string name="fragment_info_tutorial_disclaimer">Steps can vary slightly depending on your phone brand. If this doesn’t quite match your device, search online for \"how to add a widget on [your phone brand]\" for exact instructions.</string>
 
     <string name="standard_quote">Believe you can and you’re halfway there.</string>
     <string name="quote_widget_name">Quote/Fun Fact Widget</string>
@@ -30,7 +33,17 @@
     <string name="maze_new">New maze</string>
     <string name="maze_solve">Solve</string>
 
-    <string name="done">continue</string>
+    <string name="done">Got it</string>
+    <string name="reset_confirm_title">Reset your data?</string>
+    <string name="reset_confirm_message">This removes all your settings and permanently deletes your uploaded images. Your original photos stay in your gallery.</string>
+    <string name="reset_confirm_button">Reset</string>
+    <string name="image_delete_confirm_title">Delete this image?</string>
+    <string name="image_delete_confirm_message">It will be removed from the widget. Your original photo stays in your gallery.</string>
+    <string name="accent_title">Accent color</string>
+    <string name="accent_wallpaper">Follow wallpaper</string>
+    <string name="accent_swatches">Colors</string>
+    <string name="accent_custom">Custom color</string>
+    <string name="accent_use_custom">Use custom color</string>
     <string name="info_quotes">Show a fresh quote or fun fact on your home screen. The widget refreshes itself, so something new comes by regularly. In the settings you choose which types of quotes you want to see.</string>
     <string name="info_images">Show your own photos on your home screen. Upload photos in the app and the widget cycles through them every so often. You get something new to look at instead of a fixed icon. Your photos stay on your own phone, no account or server needed.</string>
     <string name="info_gen">Shows images created by an algorithm. Each time the widget refreshes, you see something new that has never been created before. In the settings, you can choose how the images look.</string>
@@ -104,6 +117,26 @@
         <item>1</item>
         <item>2</item>
         <item>3</item>
+    </string-array>
+    <string-array name="appearance_names">
+        <item>System default</item>
+        <item>Light</item>
+        <item>Dark</item>
+    </string-array>
+    <string-array name="appearance_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+    <string-array name="accent_swatch_names">
+        <item>Indigo</item>
+        <item>Blue</item>
+        <item>Teal</item>
+        <item>Green</item>
+        <item>Amber</item>
+        <item>Coral</item>
+        <item>Pink</item>
+        <item>Purple</item>
     </string-array>
 
 </resources>

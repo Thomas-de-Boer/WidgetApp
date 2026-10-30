@@ -1,64 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/fragment_settings_quotes"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/fragment_settings_quotes">
+    android:orientation="vertical">
 
-    <ImageView
-        android:id="@+id/fragment_settings_quotes_image"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:layout_marginTop="35dp"
-        android:layout_marginStart="10dp"
-        android:layout_marginBottom="10dp"
-        app:layout_constraintBottom_toTopOf="@+id/fragment_settings_quotes_settings_container"
-        app:layout_constraintEnd_toStartOf="@id/fragment_settings_quotes_image"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/arrow_icon"
-        app:tint="?attr/colorOnSurface" />
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/fragment_settings_quotes_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        app:navigationContentDescription="@string/back"
+        app:navigationIcon="@drawable/arrow_icon" />
 
-    <TextView
-        android:id="@+id/fragment_settings_quotes_text"
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/fragment_settings_quotes_preview_card"
+        style="?attr/materialCardViewOutlinedStyle"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/menu_settings"
-        android:textStyle="bold"
-        android:textSize="20sp"
-        android:layout_marginTop="35dp"
-        app:layout_constraintBottom_toTopOf="@+id/fragment_settings_quotes_settings_container"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        />
+        android:layout_height="170dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="@dimen/space_small"
+        app:cardCornerRadius="20dp">
 
-<!--    <androidx.constraintlayout.widget.ConstraintLayout-->
-<!--        android:id="@+id/fragment_settings_quotes_container"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:layout_marginTop="45dp"-->
-<!--        app:layout_constraintBottom_toTopOf="@id/fragment_settings_quotes_settings_container"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:layout_constraintTop_toTopOf="parent" >-->
+        <FrameLayout
+            android:id="@+id/fragment_settings_quotes_preview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
 
-
-
-
-
-<!--    </androidx.constraintlayout.widget.ConstraintLayout>-->
+        <!-- stops taps from reaching the buttons of the widget in the preview -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clickable="true"
+            android:focusable="false" />
+    </com.google.android.material.card.MaterialCardView>
 
     <FrameLayout
         android:id="@+id/fragment_settings_quotes_settings_container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:layout_weight="1" />
 
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/fragment_settings_quotes_image" />
-
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

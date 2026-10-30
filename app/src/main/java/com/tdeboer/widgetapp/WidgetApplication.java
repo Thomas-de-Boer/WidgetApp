@@ -8,5 +8,6 @@ public class WidgetApplication extends Application {
         super.onCreate();
 
         SettingsManager.setInstance(this);
+        AppTheme.applySavedAppearance();
     }
 }

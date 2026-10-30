@@ -5,57 +5,76 @@
     <Preference
         android:title="@string/generated_settings_update_warning_title"
         android:summary="@string/generated_settings_update_warning_summary"
-        app:selectable="false" />
+        app:selectable="false"
+        app:iconSpaceReserved="false" />
 
-    <SwitchPreferenceCompat
-        app:key="generated_random"
-        app:title="Random settings"
-        app:summary="Pick new random settings every time the widget generates a new image"
-        app:defaultValue="false" />
+    <PreferenceCategory
+        app:title="Image"
+        app:iconSpaceReserved="false">
 
-    <SeekBarPreference
-        app:key="generated_scale"
-        app:title="Noise scale"
-        app:summary="Controls the size of the generated shapes"
-        app:min="1"
-        android:max="12"
-        app:seekBarIncrement="1" />
+        <SwitchPreferenceCompat
+            app:key="generated_random"
+            app:title="Random settings"
+            app:summary="Pick new random settings every time the widget generates a new image"
+            app:defaultValue="false"
+            app:iconSpaceReserved="false" />
 
-    <SeekBarPreference
-        app:key="generated_octaves"
-        app:title="Noise detail"
-        app:summary="Controls the amount of layered detail"
-        app:min="1"
-        android:max="6"
-        app:seekBarIncrement="1" />
+        <SeekBarPreference
+            app:key="generated_scale"
+            app:title="Noise scale"
+            app:summary="Controls the size of the generated shapes"
+            app:min="1"
+            android:max="12"
+            app:seekBarIncrement="1"
+            app:iconSpaceReserved="false" />
 
-    <SeekBarPreference
-        app:key="generated_speed"
-        app:title="Map movement speed"
-        app:summary="Controls how quickly the noise map changes between frames"
-        app:min="1"
-        android:max="5"
-        app:defaultValue="1"
-        app:seekBarIncrement="1" />
+        <SeekBarPreference
+            app:key="generated_octaves"
+            app:title="Noise detail"
+            app:summary="Controls the amount of layered detail"
+            app:min="1"
+            android:max="6"
+            app:seekBarIncrement="1"
+            app:iconSpaceReserved="false" />
 
-    <ListPreference
-        app:key="generated_palette"
-        app:title="Color palette"
-        app:entries="@array/generated_palette_names"
-        app:entryValues="@array/generated_palette_values"
-        app:defaultValue="0" />
+        <ListPreference
+            app:key="generated_palette"
+            app:title="Color palette"
+            app:entries="@array/generated_palette_names"
+            app:entryValues="@array/generated_palette_values"
+            app:defaultValue="0"
+            app:useSimpleSummaryProvider="true"
+            app:iconSpaceReserved="false" />
 
-    <ListPreference
-        app:key="generated_algorithm"
-        app:title="Noise algorithm"
-        app:summary="Choose how the noise map is shaped"
-        app:entries="@array/generated_algorithm_names"
-        app:entryValues="@array/generated_algorithm_values"
-        app:defaultValue="0" />
+        <ListPreference
+            app:key="generated_algorithm"
+            app:title="Noise algorithm"
+            app:summary="Choose how the noise map is shaped"
+            app:entries="@array/generated_algorithm_names"
+            app:entryValues="@array/generated_algorithm_values"
+            app:defaultValue="0"
+            app:iconSpaceReserved="false" />
+    </PreferenceCategory>
 
-    <Preference
-        app:key="generated_reset"
-        app:title="Reset generated images"
-        app:summary="Delete the stored animation and generate a fresh one" />
+    <PreferenceCategory
+        app:title="Animation"
+        app:iconSpaceReserved="false">
+
+        <SeekBarPreference
+            app:key="generated_speed"
+            app:title="Map movement speed"
+            app:summary="Controls how quickly the noise map changes between frames"
+            app:min="1"
+            android:max="5"
+            app:defaultValue="1"
+            app:seekBarIncrement="1"
+            app:iconSpaceReserved="false" />
+
+        <Preference
+            app:key="generated_reset"
+            app:title="Reset generated images"
+            app:summary="Delete the stored animation and generate a fresh one"
+            app:iconSpaceReserved="false" />
+    </PreferenceCategory>
 
 </PreferenceScreen>

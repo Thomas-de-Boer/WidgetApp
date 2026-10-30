@@ -65,19 +65,7 @@ public class RecyclerRowAdapter extends RecyclerView.Adapter<RecyclerRowAdapter.
     public void onBindViewHolder(@NonNull MyViewHolder viewHolder, int position) {
         WidgetItem.widgetTypes widgetType = widgetTypes.get(position);
 
-        if (widgetType == WidgetItem.widgetTypes.QUOTES) {
-            viewHolder.widget_item_row_text.setText(R.string.quote_widget_name);
-        }
-        else if (widgetType == WidgetItem.widgetTypes.IMAGES) {
-            viewHolder.widget_item_row_text.setText(R.string.image_widget_name);
-        }
-        else if (widgetType == WidgetItem.widgetTypes.GEN) {
-            viewHolder.widget_item_row_text.setText(R.string.gen_widget_name);
-        }
-        else if (widgetType == WidgetItem.widgetTypes.MAZE) {
-            viewHolder.widget_item_row_text.setText(R.string.maze_widget_name);
-        }
-
+        viewHolder.widget_item_row_text.setText(WidgetItem.nameFor(widgetType));
 
         List<WidgetItem> widgetItemListType = new ArrayList<>();
         for (WidgetItem widgetItem : widgetItemList) {
@@ -88,7 +76,7 @@ public class RecyclerRowAdapter extends RecyclerView.Adapter<RecyclerRowAdapter.
 
 
         viewHolder.widget_item_row_image.setOnClickListener(v -> {
-            InfoDialogFragment infoDialogFragment = new InfoDialogFragment(typeToString.get(widgetType));
+            InfoDialogFragment infoDialogFragment = InfoDialogFragment.newInstance(typeToString.get(widgetType));
             infoDialogFragment.show(fragmentManager, "INFO_DIALOG");
         });
 

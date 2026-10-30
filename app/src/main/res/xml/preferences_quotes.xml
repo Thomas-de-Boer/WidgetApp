@@ -9,12 +9,14 @@
         app:min="0"
         android:max="100"
         app:seekBarIncrement="1"
+        app:iconSpaceReserved="false"
         />
 
     <SwitchPreferenceCompat
         app:key="quote_avoid_repeats"
         app:title="Avoid repeats"
         app:summary="Show each quote or fact again only after the available items have been used"
-        app:defaultValue="false" />
+        app:defaultValue="false"
+        app:iconSpaceReserved="false" />
 
 </PreferenceScreen>

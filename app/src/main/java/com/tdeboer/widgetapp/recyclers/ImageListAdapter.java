@@ -6,7 +6,7 @@ import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -76,7 +76,7 @@ public class ImageListAdapter extends RecyclerView.Adapter<ImageListAdapter.MyVi
 
     public static class MyViewHolder extends RecyclerView.ViewHolder {
         ImageView images_list_preference_card_image;
-        Button images_list_preference_card_button;
+        ImageButton images_list_preference_card_button;
 
         public MyViewHolder(@NonNull View itemView) {
 

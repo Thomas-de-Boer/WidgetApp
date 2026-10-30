@@ -28,6 +28,8 @@ import java.util.concurrent.Executors;
 public class SettingsManager {
 //    place where settings are stored
     private static GuavaDataStore<Preferences> dataStore;
+//    told about every save, for screens that show the result of a setting
+    private static volatile Runnable changeListener;
 //    a thread where search's happen
     private static final Executor executor = Executors.newSingleThreadExecutor();
 
@@ -50,6 +52,8 @@ public class SettingsManager {
     public static final Preferences.Key<Integer> MAZE_STYLE = PreferencesKeys.intKey("MAZE_STYLE");
     public static final Preferences.Key<Integer> MAZE_THEME = PreferencesKeys.intKey("MAZE_THEME");
     public static final Preferences.Key<Integer> MAZE_SPEED = PreferencesKeys.intKey("MAZE_SPEED");
+    public static final Preferences.Key<Integer> APPEARANCE = PreferencesKeys.intKey("APPEARANCE");
+    public static final Preferences.Key<Integer> ACCENT_COLOR = PreferencesKeys.intKey("ACCENT_COLOR");
 
 //    every maze widget has its own maze, so these fields exist per widget
     public static Preferences.Key<Long> mazeSeedKey(int appWidgetId) {
@@ -78,6 +82,17 @@ public class SettingsManager {
         return dataStore;
     }
 
+    public static void setChangeListener(Runnable listener) {
+        changeListener = listener;
+    }
+
+    private static void notifyChanged() {
+        Runnable listener = changeListener;
+        if (listener != null) {
+            listener.run();
+        }
+    }
+
 //    write method: write the settings to disc. uses the setting field and the new value
     public static <T> void write(Preferences.Key<T> key, T value, Callback<T> callback) {
         ListenableFuture<Preferences> future = getDataStore().updateDataAsync(preferences -> {
@@ -89,6 +104,7 @@ public class SettingsManager {
             @Override
             public void onSuccess(Preferences result) {
                 callback.onResult(value);
+                notifyChanged();
             }
 
             @Override
@@ -198,6 +214,7 @@ public class SettingsManager {
         });
         try {
             future.get();
+            notifyChanged();
         } catch (ExecutionException | InterruptedException e) {
             // same as readsync: the caller goes on with what it has
         }
