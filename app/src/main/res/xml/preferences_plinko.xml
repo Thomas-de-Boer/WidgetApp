@@ -14,6 +14,13 @@
             app:useSimpleSummaryProvider="true"
             app:iconSpaceReserved="false" />
 
+        <SwitchPreferenceCompat
+            app:key="plinko_quick_finish"
+            app:title="Quick finish"
+            app:summary="Once the points of a level are reached, the falling balls make new balls one last time. Those pale balls still give points, but no new balls"
+            app:defaultValue="true"
+            app:iconSpaceReserved="false" />
+
         <Preference
             app:key="plinko_reset_progress"
             app:title="Reset progress"

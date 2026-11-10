@@ -180,6 +180,49 @@ public class PlinkoBoardTest {
     }
 
     @Test
+    public void quickFinishStopsNewBallsAfterOneMoreRound() {
+        PlinkoBoard board = new PlinkoBoard(5, 1, 3);
+        board.setQuickFinish(true);
+        // four balls on +3 give 12 points, enough for level 1. the fifth ball lands after that
+        for (int i = 0; i < 4; i++) {
+            board.dropWithPath(pathWithRights(0));
+        }
+        board.advanceTo(10);
+        board.dropWithPath(pathWithRights(0));
+
+        board.advanceTo(PlinkoBoard.TRAVEL_FRAMES);
+        assertEquals(12, board.score());
+        // the balls of the four that reached the points are whole, like the fifth that was already falling
+        assertEquals(13, board.inPlay());
+
+        board.advanceTo(PlinkoBoard.TRAVEL_FRAMES + 50);
+        assertEquals(15, board.score());
+        int spent = 0;
+        for (PlinkoBoard.Ball ball : board.balls()) {
+            if (ball.spent) {
+                spent++;
+            }
+        }
+        // only the three balls of the fifth are spent
+        assertEquals(3, spent);
+        assertEquals(15, board.inPlay());
+
+        // whole balls make spent balls, and spent balls make nothing: two more rounds at most
+        int limit = board.frame() + 3 * PlinkoBoard.TRAVEL_FRAMES + 99 * PlinkoBoard.RELEASE_GAP;
+        while (board.phase() == PlinkoBoard.PLAYING) {
+            board.step();
+            assertTrue(board.frame() < limit);
+        }
+        assertEquals(PlinkoBoard.WON, board.phase());
+        playOut(board);
+        assertEquals(2, board.level());
+
+        // the next level starts with whole balls again
+        board.dropWithPath(pathWithRights(0));
+        assertFalse(board.balls().get(0).spent);
+    }
+
+    @Test
     public void targetGrowsEveryLevel() {
         assertEquals(10, PlinkoBoard.target(1));
         for (int level = 1; level < 200; level++) {

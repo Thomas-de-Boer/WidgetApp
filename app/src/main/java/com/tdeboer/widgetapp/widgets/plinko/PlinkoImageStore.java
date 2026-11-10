@@ -207,6 +207,9 @@ final class PlinkoImageStore {
             game.set = prefix(appWidgetId) + UUID.randomUUID();
             GAMES.put(appWidgetId, game);
         }
+        // read every time, so a change of the setting counts from the next frame that is drawn
+        Boolean quickFinish = SettingsManager.readsyncWidget(SettingsManager.PLINKO_QUICK_FINISH, appWidgetId);
+        game.board.setQuickFinish(quickFinish == null || quickFinish);
         return game;
     }
 

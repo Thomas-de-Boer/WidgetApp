@@ -29,6 +29,7 @@ public final class PlinkoBoard {
     // the last life is gone: the game starts again at level 1
     static final int GAME_OVER = 3;
     static final int START_LIVES = 3;
+    private static final int SPENT = 8;
 
     // how long each part of the fall takes, in frames
     static final int DROP_FRAMES = 8;
@@ -56,12 +57,15 @@ public final class PlinkoBoard {
         final float jitter;
         // the dropped ball this one comes from, 0 for the first drop of the level
         final int chain;
+        // a spent ball still gives points, but makes no new balls
+        final boolean spent;
 
-        Ball(int start, int path, float jitter, int chain) {
+        Ball(int start, int path, float jitter, int chain, boolean spent) {
             this.start = start;
             this.path = path;
             this.jitter = jitter;
             this.chain = chain;
+            this.spent = spent;
         }
 
         int slot() {
@@ -85,7 +89,7 @@ public final class PlinkoBoard {
     private long random;
     private int frame;
     private final List<Ball> balls;
-    // the chains of the balls that wait at the top
+    // the chains of the balls that wait at the top, with SPENT added for a spent ball
     private final ArrayDeque<Integer> waiting;
     private final List<Popup> popups;
     private int lastRelease;
@@ -98,6 +102,10 @@ public final class PlinkoBoard {
     // how many balls every chain of this level has made so far
     private final int[] chainSizes;
     private int lives;
+    // with a quick finish the level is wrapped up once the points are reached: the balls that fall
+    // at that moment still make new balls, and those new balls are spent
+    private boolean quickFinish;
+    private boolean finishing;
     private int phase;
     private int phaseEnd;
 
@@ -130,6 +138,8 @@ public final class PlinkoBoard {
         score = other.score;
         chainSizes = other.chainSizes.clone();
         lives = other.lives;
+        quickFinish = other.quickFinish;
+        finishing = other.finishing;
         phase = other.phase;
         phaseEnd = other.phaseEnd;
     }
@@ -158,6 +168,10 @@ public final class PlinkoBoard {
             return 2;
         }
         return 1;
+    }
+
+    public void setQuickFinish(boolean quickFinish) {
+        this.quickFinish = quickFinish;
     }
 
     public int frame() {
@@ -214,8 +228,8 @@ public final class PlinkoBoard {
         for (Ball ball : balls) {
             best = Math.max(best, multiplier(chainSizes[ball.chain]));
         }
-        for (int chain : waiting) {
-            best = Math.max(best, multiplier(chainSizes[chain]));
+        for (int ball : waiting) {
+            best = Math.max(best, multiplier(chainSizes[ball % SPENT]));
         }
         return best;
     }
@@ -235,14 +249,14 @@ public final class PlinkoBoard {
         if (phase != PLAYING || ballsLeft == 0) {
             return false;
         }
-        waiting.add(takeBall());
+        waiting.add(takeBall() + (finishing ? SPENT : 0));
         release();
         return true;
     }
 
     // only for tests: drops a ball with a known path
     void dropWithPath(int path) {
-        balls.add(new Ball(frame, path, 0f, takeBall()));
+        balls.add(new Ball(frame, path, 0f, takeBall(), finishing));
     }
 
     // the chain that the next dropped ball starts
@@ -294,10 +308,14 @@ public final class PlinkoBoard {
             score += points;
             popups.add(new Popup(slot, points, frame));
             // balls above the limit are lost
-            int added = Math.max(0, Math.min(value, MAX_IN_PLAY - inPlay()));
+            int added = ball.spent ? 0 : Math.max(0, Math.min(value, MAX_IN_PLAY - inPlay()));
             chainSizes[ball.chain] += added;
             for (int i = 0; i < added; i++) {
-                waiting.add(ball.chain);
+                waiting.add(ball.chain + (finishing ? SPENT : 0));
+            }
+            // the ball that reaches the points still makes whole balls, everything after it is spent
+            if (quickFinish && score >= target()) {
+                finishing = true;
             }
         }
     }
@@ -326,6 +344,7 @@ public final class PlinkoBoard {
             ballsLeft = BALLS_PER_LEVEL;
             score = 0;
             Arrays.fill(chainSizes, 0);
+            finishing = false;
             lastEvent = frame - POPUP_FRAMES;
         }
     }
@@ -333,7 +352,8 @@ public final class PlinkoBoard {
     private void release() {
         if (!waiting.isEmpty() && balls.size() < MAX_ON_SCREEN && frame - lastRelease >= RELEASE_GAP) {
             float jitter = (nextFloat() * 2f - 1f) * DROP_SPREAD;
-            balls.add(new Ball(frame, nextPath(), jitter, waiting.remove()));
+            int next = waiting.remove();
+            balls.add(new Ball(frame, nextPath(), jitter, next % SPENT, next >= SPENT));
             lastRelease = frame;
         }
     }

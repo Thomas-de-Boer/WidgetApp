@@ -53,6 +53,7 @@ public class SettingsManager {
     public static final Preferences.Key<Integer> MAZE_THEME = PreferencesKeys.intKey("MAZE_THEME");
     public static final Preferences.Key<Integer> MAZE_SPEED = PreferencesKeys.intKey("MAZE_SPEED");
     public static final Preferences.Key<Integer> PLINKO_THEME = PreferencesKeys.intKey("PLINKO_THEME");
+    public static final Preferences.Key<Boolean> PLINKO_QUICK_FINISH = PreferencesKeys.booleanKey("PLINKO_QUICK_FINISH");
     public static final Preferences.Key<Integer> APPEARANCE = PreferencesKeys.intKey("APPEARANCE");
     public static final Preferences.Key<Integer> ACCENT_COLOR = PreferencesKeys.intKey("ACCENT_COLOR");
 
@@ -200,6 +201,7 @@ public class SettingsManager {
         ListenableFuture<Preferences> future = getDataStore().updateDataAsync(preferences -> {
             MutablePreferences mutablePreferences = preferences.toMutablePreferences();
             mutablePreferences.remove(PLINKO_THEME);
+            mutablePreferences.remove(PLINKO_QUICK_FINISH);
             for (Preferences.Key<?> key : preferences.asMap().keySet()) {
                 if (key.getName().startsWith(PLINKO_BEST_PREFIX) || key.getName().startsWith(PLINKO_LEVEL_PREFIX)
                         || key.getName().startsWith(PLINKO_LIVES_PREFIX)) {

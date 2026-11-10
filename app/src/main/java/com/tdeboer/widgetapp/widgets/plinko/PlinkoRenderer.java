@@ -103,8 +103,12 @@ final class PlinkoRenderer {
 
         for (PlinkoBoard.Ball ball : board.balls()) {
             board.position(ball, position);
+            // spent balls are pale: they give points but no new balls
+            ballPaint.setAlpha(ball.spent ? 110 : 255);
             canvas.drawCircle(pixelX(position[0]), pixelY(position[1]), BALL_RADIUS, ballPaint);
         }
+
+        ballPaint.setAlpha(255);
 
         for (PlinkoBoard.Popup popup : board.popups()) {
             drawPopup(canvas, popup, board.frame() - popup.start);

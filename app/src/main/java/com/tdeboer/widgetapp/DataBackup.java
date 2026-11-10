@@ -72,6 +72,7 @@ public final class DataBackup {
             intRange(SettingsManager.MAZE_THEME, 0, 3),
             intRange(SettingsManager.MAZE_SPEED, 10, 60),
             intRange(SettingsManager.PLINKO_THEME, 0, 3),
+            new Setting<>(SettingsManager.PLINKO_QUICK_FINISH, JsonElement::getAsBoolean),
             intRange(SettingsManager.APPEARANCE, AppTheme.APPEARANCE_SYSTEM, AppTheme.APPEARANCE_DARK),
             new Setting<>(SettingsManager.ACCENT_COLOR, JsonElement::getAsInt)
     );
