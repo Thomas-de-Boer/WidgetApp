@@ -151,13 +151,12 @@ final class PlinkoImageStore {
     }
 
     // draws the game as it is now with the current settings. the callback gets null if that failed.
-    // resetProgress starts again at level 1 with all lives
+    // resetProgress starts again at level 1 with all lives. the highest level stays, it only ever goes up
     static void still(Context context, int appWidgetId, boolean resetProgress, SettingsManager.Callback<String> callback) {
         EXECUTOR.execute(() -> {
             if (resetProgress) {
                 SettingsManager.writesync(SettingsManager.plinkoLevelKey(appWidgetId), 1);
                 SettingsManager.writesync(SettingsManager.plinkoLivesKey(appWidgetId), PlinkoBoard.START_LIVES);
-                SettingsManager.writesync(SettingsManager.plinkoBestKey(appWidgetId), 1);
                 GAMES.remove(appWidgetId);
             }
             Game game = game(appWidgetId);

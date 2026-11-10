@@ -196,14 +196,14 @@ public class SettingsManager {
         }, executor);
     }
 
-//    resets the plinko colors and the progress of every plinko widget
+//    resets the plinko colors and the progress of every plinko widget. the highest level stays
     public static void resetPlinkoSettings(Runnable callback) {
         ListenableFuture<Preferences> future = getDataStore().updateDataAsync(preferences -> {
             MutablePreferences mutablePreferences = preferences.toMutablePreferences();
             mutablePreferences.remove(PLINKO_THEME);
             mutablePreferences.remove(PLINKO_QUICK_FINISH);
             for (Preferences.Key<?> key : preferences.asMap().keySet()) {
-                if (key.getName().startsWith(PLINKO_BEST_PREFIX) || key.getName().startsWith(PLINKO_LEVEL_PREFIX)
+                if (key.getName().startsWith(PLINKO_LEVEL_PREFIX)
                         || key.getName().startsWith(PLINKO_LIVES_PREFIX)) {
                     mutablePreferences.remove(key);
                 }
