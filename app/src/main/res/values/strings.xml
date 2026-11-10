@@ -33,6 +33,10 @@
     <string name="maze_new">New maze</string>
     <string name="maze_solve">Solve</string>
 
+    <string name="plinko_widget_name">Plinko Widget</string>
+    <string name="plinko_widget_description">Drop balls through the pins and watch them multiply</string>
+    <string name="plinko_widget_loading">Setting up the board...</string>
+
     <string name="done">Got it</string>
     <string name="reset_confirm_title">Reset your data?</string>
     <string name="reset_confirm_message">This removes all your settings and permanently deletes your uploaded images. Your original photos stay in your gallery.</string>
@@ -58,6 +62,7 @@
     <string name="info_images">Show your own photos on your home screen. Upload photos in the app and the widget cycles through them every so often. You get something new to look at instead of a fixed icon. Your photos stay on your own phone, no account or server needed.</string>
     <string name="info_gen">Shows images created by an algorithm. Each time the widget refreshes, you see something new that has never been created before. In the settings, you can choose how the images look.</string>
     <string name="info_maze">Shows a maze that is generated just for you, with exactly one way out. Press Solve to watch the path being drawn, or New maze to get another one. Every 30 minutes the widget makes a new maze by itself. In the settings, you can choose the size, solver speed, style and colors.</string>
+    <string name="info_plinko">Tap anywhere on the widget to drop a ball. It bounces down through the pins into one of the slots. In the middle slot (-1) the ball is gone. In the other slots it turns into new balls that drop from the top again: 1, 2 or 3 balls, the number on the slot. You can drop one ball per second. The number at the top left is how many balls are in play, the number next to the star is your best. There can be 99 balls in play, of which 30 fall at the same time. The balls freeze 30 seconds after your last tap, or when the screen turns off. Tap again and they fall on. In the settings you can choose the colors and reset your best.</string>
     <string name="delete">Delete</string>
 
     <string name="update_available">Version %1$s is available</string>

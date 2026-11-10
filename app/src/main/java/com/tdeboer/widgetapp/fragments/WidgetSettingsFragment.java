@@ -23,6 +23,7 @@ import com.tdeboer.widgetapp.R;
 import com.tdeboer.widgetapp.SettingsManager;
 import com.tdeboer.widgetapp.preferences.GenPreference;
 import com.tdeboer.widgetapp.preferences.MazePreference;
+import com.tdeboer.widgetapp.preferences.PlinkoPreference;
 import com.tdeboer.widgetapp.preferences.ImagePreference;
 import com.tdeboer.widgetapp.preferences.QuotePreference;
 import com.tdeboer.widgetapp.recyclers.WidgetCardSize;
@@ -87,6 +88,7 @@ public class WidgetSettingsFragment extends Fragment {
         typeToPreference.put(WidgetItem.widgetTypes.IMAGES, new ImagePreference());
         typeToPreference.put(WidgetItem.widgetTypes.GEN, new GenPreference());
         typeToPreference.put(WidgetItem.widgetTypes.MAZE, new MazePreference());
+        typeToPreference.put(WidgetItem.widgetTypes.PLINKO, new PlinkoPreference());
 
         Bundle arguments = new Bundle();
         arguments.putInt(ARGUMENT_WIDGET_ID, appWidgetId);

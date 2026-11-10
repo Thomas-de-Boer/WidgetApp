@@ -27,6 +27,7 @@ import com.tdeboer.widgetapp.recyclers.WidgetItem;
 import com.tdeboer.widgetapp.widgets.gen.WidgetProviderGen;
 import com.tdeboer.widgetapp.widgets.image.WidgetProviderImages;
 import com.tdeboer.widgetapp.widgets.maze.WidgetProviderMaze;
+import com.tdeboer.widgetapp.widgets.plinko.WidgetProviderPlinko;
 import com.tdeboer.widgetapp.widgets.quote.WidgetProviderQuotes;
 
 import java.util.ArrayList;
@@ -53,6 +54,7 @@ public class WidgetFragment extends Fragment {
         classAndEnums.put(WidgetProviderImages.class, WidgetItem.widgetTypes.IMAGES);
         classAndEnums.put(WidgetProviderGen.class, WidgetItem.widgetTypes.GEN);
         classAndEnums.put(WidgetProviderMaze.class, WidgetItem.widgetTypes.MAZE);
+        classAndEnums.put(WidgetProviderPlinko.class, WidgetItem.widgetTypes.PLINKO);
     }
 
     private void showTutorial() {

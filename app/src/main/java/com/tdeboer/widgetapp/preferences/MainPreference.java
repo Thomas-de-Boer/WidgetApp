@@ -28,6 +28,7 @@ import com.tdeboer.widgetapp.widgets.gen.GeneratedImageStore;
 import com.tdeboer.widgetapp.widgets.image.WidgetHelperImages;
 import com.tdeboer.widgetapp.widgets.image.WidgetProviderImages;
 import com.tdeboer.widgetapp.widgets.maze.WidgetProviderMaze;
+import com.tdeboer.widgetapp.widgets.plinko.WidgetProviderPlinko;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -180,6 +181,7 @@ public class MainPreference extends PreferenceFragmentCompat {
         SettingsManager.resetData(SettingsManager.FACT_HISTORY);
         GeneratedImageStore.deleteAll(context);
         SettingsManager.resetMazeSettings(() -> WidgetProviderMaze.update(context));
+        SettingsManager.resetPlinkoSettings(() -> WidgetProviderPlinko.update(context));
         SettingsManager.write(SettingsManager.ACCENT_COLOR, AppTheme.ACCENT_WALLPAPER, accent ->
                 SettingsManager.write(SettingsManager.APPEARANCE, AppTheme.APPEARANCE_SYSTEM, ignored -> runOnUi(() -> {
                     AppTheme.applyAppearance(AppTheme.APPEARANCE_SYSTEM);

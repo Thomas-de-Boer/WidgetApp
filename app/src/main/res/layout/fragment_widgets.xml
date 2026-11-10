@@ -85,6 +85,14 @@
                 style="@style/WidgetListDescription"
                 android:text="@string/maze_widget_description" />
 
+            <TextView
+                style="@style/WidgetListName"
+                android:text="@string/plinko_widget_name" />
+
+            <TextView
+                style="@style/WidgetListDescription"
+                android:text="@string/plinko_widget_description" />
+
         </LinearLayout>
     </ScrollView>
 

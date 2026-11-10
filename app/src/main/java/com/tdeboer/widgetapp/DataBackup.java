@@ -18,6 +18,7 @@ import com.tdeboer.widgetapp.widgets.gen.WidgetProviderGen;
 import com.tdeboer.widgetapp.widgets.image.WidgetHelperImages;
 import com.tdeboer.widgetapp.widgets.image.WidgetProviderImages;
 import com.tdeboer.widgetapp.widgets.maze.WidgetProviderMaze;
+import com.tdeboer.widgetapp.widgets.plinko.WidgetProviderPlinko;
 import com.tdeboer.widgetapp.widgets.quote.WidgetProviderQuotes;
 
 import java.io.ByteArrayOutputStream;
@@ -70,6 +71,7 @@ public final class DataBackup {
             intRange(SettingsManager.MAZE_STYLE, 0, 2),
             intRange(SettingsManager.MAZE_THEME, 0, 3),
             intRange(SettingsManager.MAZE_SPEED, 10, 60),
+            intRange(SettingsManager.PLINKO_THEME, 0, 3),
             intRange(SettingsManager.APPEARANCE, AppTheme.APPEARANCE_SYSTEM, AppTheme.APPEARANCE_DARK),
             new Setting<>(SettingsManager.ACCENT_COLOR, JsonElement::getAsInt)
     );
@@ -81,6 +83,7 @@ public final class DataBackup {
         PROVIDERS.put(WidgetItem.widgetTypes.IMAGES, WidgetProviderImages.class);
         PROVIDERS.put(WidgetItem.widgetTypes.GEN, WidgetProviderGen.class);
         PROVIDERS.put(WidgetItem.widgetTypes.MAZE, WidgetProviderMaze.class);
+        PROVIDERS.put(WidgetItem.widgetTypes.PLINKO, WidgetProviderPlinko.class);
     }
 
     private DataBackup() { }
@@ -345,6 +348,7 @@ public final class DataBackup {
         WidgetProviderImages.update(context, manager, widgetIds(context, WidgetItem.widgetTypes.IMAGES));
         WidgetProviderGen.updateAllWithCurrentSettings(context);
         WidgetProviderMaze.update(context);
+        WidgetProviderPlinko.update(context);
     }
 
     private static int[] widgetIds(Context context, WidgetItem.widgetTypes type) {

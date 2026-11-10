@@ -13,10 +13,11 @@ import androidx.annotation.Nullable;
 import java.io.File;
 import java.io.FileNotFoundException;
 
-// serves the generated and maze frames read-only, so the launcher can load and animate them by itself
+// serves the generated, maze and plinko frames read-only, so the launcher can load and animate them by itself
 public class GeneratedImageProvider extends ContentProvider {
     private static final String GENERATED_FILE = "generated_\\d+_[A-Za-z0-9-]+_\\d+\\.jpg";
     private static final String MAZE_FILE = "maze_\\d+_[A-Za-z0-9-]+_\\d+\\.png";
+    private static final String PLINKO_FILE = "plinko_\\d+_[A-Za-z0-9-]+_\\d+\\.png";
 
     public static Uri uriFor(Context context, String fileName) {
         return new Uri.Builder()
@@ -46,6 +47,8 @@ public class GeneratedImageProvider extends ContentProvider {
             directory = "generated_widget";
         } else if (name.matches(MAZE_FILE)) {
             directory = "maze_widget";
+        } else if (name.matches(PLINKO_FILE)) {
+            directory = "plinko_widget";
         } else {
             throw new FileNotFoundException("Unknown file");
         }

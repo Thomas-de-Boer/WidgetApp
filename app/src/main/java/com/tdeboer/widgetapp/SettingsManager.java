@@ -52,6 +52,7 @@ public class SettingsManager {
     public static final Preferences.Key<Integer> MAZE_STYLE = PreferencesKeys.intKey("MAZE_STYLE");
     public static final Preferences.Key<Integer> MAZE_THEME = PreferencesKeys.intKey("MAZE_THEME");
     public static final Preferences.Key<Integer> MAZE_SPEED = PreferencesKeys.intKey("MAZE_SPEED");
+    public static final Preferences.Key<Integer> PLINKO_THEME = PreferencesKeys.intKey("PLINKO_THEME");
     public static final Preferences.Key<Integer> APPEARANCE = PreferencesKeys.intKey("APPEARANCE");
     public static final Preferences.Key<Integer> ACCENT_COLOR = PreferencesKeys.intKey("ACCENT_COLOR");
 
@@ -73,6 +74,13 @@ public class SettingsManager {
 
     public static Preferences.Key<Boolean> mazeSolvedKey(int appWidgetId) {
         return PreferencesKeys.booleanKey("MAZE_SOLVED_" + appWidgetId);
+    }
+
+    private static final String PLINKO_BEST_PREFIX = "PLINKO_BEST_";
+
+//    the most balls a plinko widget ever had in play
+    public static Preferences.Key<Integer> plinkoBestKey(int appWidgetId) {
+        return PreferencesKeys.intKey(PLINKO_BEST_PREFIX + appWidgetId);
     }
 
     private SettingsManager() { }
@@ -158,6 +166,31 @@ public class SettingsManager {
             mutablePreferences.remove(MAZE_STYLE);
             mutablePreferences.remove(MAZE_THEME);
             mutablePreferences.remove(MAZE_SPEED);
+            return mutablePreferences;
+        });
+        Futures.addCallback(future, new FutureCallback<Preferences>() {
+            @Override
+            public void onSuccess(Preferences result) {
+                callback.run();
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                callback.run();
+            }
+        }, executor);
+    }
+
+//    resets the plinko colors and the best of every plinko widget
+    public static void resetPlinkoSettings(Runnable callback) {
+        ListenableFuture<Preferences> future = getDataStore().updateDataAsync(preferences -> {
+            MutablePreferences mutablePreferences = preferences.toMutablePreferences();
+            mutablePreferences.remove(PLINKO_THEME);
+            for (Preferences.Key<?> key : preferences.asMap().keySet()) {
+                if (key.getName().startsWith(PLINKO_BEST_PREFIX)) {
+                    mutablePreferences.remove(key);
+                }
+            }
             return mutablePreferences;
         });
         Futures.addCallback(future, new FutureCallback<Preferences>() {

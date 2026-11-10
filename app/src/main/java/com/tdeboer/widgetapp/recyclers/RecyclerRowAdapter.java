@@ -51,6 +51,7 @@ public class RecyclerRowAdapter extends RecyclerView.Adapter<RecyclerRowAdapter.
         typeToString.put(WidgetItem.widgetTypes.IMAGES, R.string.info_images);
         typeToString.put(WidgetItem.widgetTypes.GEN, R.string.info_gen);
         typeToString.put(WidgetItem.widgetTypes.MAZE, R.string.info_maze);
+        typeToString.put(WidgetItem.widgetTypes.PLINKO, R.string.info_plinko);
     }
 
     @NonNull

@@ -7,7 +7,8 @@ public class WidgetItem {
         QUOTES,
         IMAGES,
         GEN,
-        MAZE
+        MAZE,
+        PLINKO
     }
     int widgetId;
     public widgetTypes widgetType;
@@ -20,6 +21,8 @@ public class WidgetItem {
                 return R.string.image_widget_name;
             case MAZE:
                 return R.string.maze_widget_name;
+            case PLINKO:
+                return R.string.plinko_widget_name;
             default:
                 return R.string.gen_widget_name;
         }
