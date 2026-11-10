@@ -94,6 +94,16 @@ public class WidgetProviderPlinko extends AppWidgetProvider {
         }
     }
 
+    // draws the other plinko widgets again, except the ones that are playing: those draw themselves
+    static void redrawOthers(Context context, int exceptAppWidgetId) {
+        AppWidgetManager manager = AppWidgetManager.getInstance(context);
+        for (int appWidgetId : manager.getAppWidgetIds(new ComponentName(context, WidgetProviderPlinko.class))) {
+            if (appWidgetId != exceptAppWidgetId && !RUNS.containsKey(appWidgetId)) {
+                showStill(context, appWidgetId, false);
+            }
+        }
+    }
+
     public static void update(Context context, int appWidgetId) {
         showStill(context, appWidgetId, false);
     }

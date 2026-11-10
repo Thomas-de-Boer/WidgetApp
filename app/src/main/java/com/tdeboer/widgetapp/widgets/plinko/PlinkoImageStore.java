@@ -113,7 +113,7 @@ final class PlinkoImageStore {
                 game.board.drop();
             }
             newSet(context, appWidgetId, game);
-            saveProgress(appWidgetId, game);
+            saveProgress(context, appWidgetId, game);
 
             long startTime = SystemClock.elapsedRealtime();
             List<String> frames = renderFrames(context, appWidgetId, game, start, FIRST_CHUNK_FRAMES + OVERLAP_FRAMES, false);
@@ -136,7 +136,7 @@ final class PlinkoImageStore {
                 return;
             }
             game.board.advanceTo(start);
-            saveProgress(appWidgetId, game);
+            saveProgress(context, appWidgetId, game);
             deleteFrames(context, game.set, start - KEEP_FRAMES);
 
             if (pause || game.board.isIdle()) {
@@ -171,7 +171,7 @@ final class PlinkoImageStore {
             GAMES.remove(appWidgetId);
             deleteSets(context, appWidgetId, null, null);
             // a record from when it was kept per widget moves to the shared one before it is removed
-            int best = readBest(appWidgetId);
+            int best = readBest();
             if (best > readInt(SettingsManager.PLINKO_BEST, 1)) {
                 SettingsManager.writesync(SettingsManager.PLINKO_BEST, best);
             }
@@ -225,7 +225,7 @@ final class PlinkoImageStore {
     }
 
     // the level and lives are saved when they change, so the game goes on there after the app was closed
-    private static void saveProgress(int appWidgetId, Game game) {
+    private static void saveProgress(Context context, int appWidgetId, Game game) {
         int lives = game.board.lives();
         if (lives != readInt(SettingsManager.plinkoLivesKey(appWidgetId), PlinkoBoard.START_LIVES)) {
             SettingsManager.writesync(SettingsManager.plinkoLivesKey(appWidgetId), lives);
@@ -234,14 +234,16 @@ final class PlinkoImageStore {
         if (level != readInt(SettingsManager.plinkoLevelKey(appWidgetId), 1)) {
             SettingsManager.writesync(SettingsManager.plinkoLevelKey(appWidgetId), level);
         }
-        if (level > readBest(appWidgetId)) {
+        if (level > readBest()) {
             SettingsManager.writesync(SettingsManager.PLINKO_BEST, level);
+            // the other plinko widgets show the same record
+            WidgetProviderPlinko.redrawOthers(context, appWidgetId);
         }
     }
 
-    private static int readBest(int appWidgetId) {
-        // the highest level counts for all plinko widgets. it used to be kept per widget
-        return Math.max(readInt(SettingsManager.PLINKO_BEST, 1), readInt(SettingsManager.plinkoBestKey(appWidgetId), 1));
+    // the highest level counts for all plinko widgets
+    private static int readBest() {
+        return SettingsManager.readsyncPlinkoBest();
     }
 
     private static int readInt(Preferences.Key<Integer> key, int defaultValue) {
@@ -266,7 +268,7 @@ final class PlinkoImageStore {
 
         PlinkoBoard board = game.board.copy();
         board.advanceTo(start);
-        int best = readBest(appWidgetId);
+        int best = readBest();
         PlinkoRenderer renderer = null;
         Bitmap bitmap = null;
         try {

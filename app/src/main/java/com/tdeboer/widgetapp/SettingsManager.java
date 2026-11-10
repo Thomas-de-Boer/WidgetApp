@@ -316,6 +316,25 @@ public class SettingsManager {
         return readsync(GENERATED_IMAGES);
     }
 
+//    the highest plinko level: the shared record, or a higher one that was still stored per widget
+    public static int readsyncPlinkoBest() {
+        Preferences preferences;
+        try {
+            preferences = getDataStore().getDataAsync().get();
+        } catch (ExecutionException | InterruptedException e) {
+            return 1;
+        }
+        int best = 1;
+        for (java.util.Map.Entry<Preferences.Key<?>, Object> entry : preferences.asMap().entrySet()) {
+            String name = entry.getKey().getName();
+            boolean isBest = name.equals(PLINKO_BEST.getName()) || name.startsWith(PLINKO_BEST_PREFIX);
+            if (isBest && entry.getValue() instanceof Integer) {
+                best = Math.max(best, (Integer) entry.getValue());
+            }
+        }
+        return best;
+    }
+
     public static <T> T readsync(Preferences.Key<T> key) {
         ListenableFuture<Preferences> future = getDataStore().getDataAsync();
         Preferences preferences;
