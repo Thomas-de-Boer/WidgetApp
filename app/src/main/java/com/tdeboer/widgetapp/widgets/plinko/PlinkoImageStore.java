@@ -151,7 +151,7 @@ final class PlinkoImageStore {
     }
 
     // draws the game as it is now with the current settings. the callback gets null if that failed.
-    // resetProgress starts again at level 1 with all lives. the highest level stays, it only ever goes up
+    // resetProgress starts again at level 1 with all lives. the highest level stays
     static void still(Context context, int appWidgetId, boolean resetProgress, SettingsManager.Callback<String> callback) {
         EXECUTOR.execute(() -> {
             if (resetProgress) {
@@ -170,6 +170,11 @@ final class PlinkoImageStore {
             WAITING_TAPS.remove(appWidgetId);
             GAMES.remove(appWidgetId);
             deleteSets(context, appWidgetId, null, null);
+            // a record from when it was kept per widget moves to the shared one before it is removed
+            int best = readBest(appWidgetId);
+            if (best > readInt(SettingsManager.PLINKO_BEST, 1)) {
+                SettingsManager.writesync(SettingsManager.PLINKO_BEST, best);
+            }
             SettingsManager.resetData(SettingsManager.plinkoBestKey(appWidgetId));
             SettingsManager.resetData(SettingsManager.plinkoLevelKey(appWidgetId));
             SettingsManager.resetData(SettingsManager.plinkoLivesKey(appWidgetId));
@@ -230,12 +235,13 @@ final class PlinkoImageStore {
             SettingsManager.writesync(SettingsManager.plinkoLevelKey(appWidgetId), level);
         }
         if (level > readBest(appWidgetId)) {
-            SettingsManager.writesync(SettingsManager.plinkoBestKey(appWidgetId), level);
+            SettingsManager.writesync(SettingsManager.PLINKO_BEST, level);
         }
     }
 
     private static int readBest(int appWidgetId) {
-        return readInt(SettingsManager.plinkoBestKey(appWidgetId), 1);
+        // the highest level counts for all plinko widgets. it used to be kept per widget
+        return Math.max(readInt(SettingsManager.PLINKO_BEST, 1), readInt(SettingsManager.plinkoBestKey(appWidgetId), 1));
     }
 
     private static int readInt(Preferences.Key<Integer> key, int defaultValue) {
