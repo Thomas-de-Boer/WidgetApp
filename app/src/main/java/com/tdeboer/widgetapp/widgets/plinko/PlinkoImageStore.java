@@ -6,6 +6,8 @@ import android.graphics.Canvas;
 import android.os.SystemClock;
 import android.util.Log;
 
+import androidx.datastore.preferences.core.Preferences;
+
 import com.tdeboer.widgetapp.SettingsManager;
 
 import java.io.File;
@@ -16,10 +18,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BooleanSupplier;
 
 // keeps the game of every plinko widget and draws its frames.
 // all work runs on one thread, so the games are only touched there
@@ -36,19 +40,23 @@ final class PlinkoImageStore {
     private static final String TAG = "PlinkoImageStore";
     private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor();
     private static final Map<Integer, Game> GAMES = new HashMap<>();
-    // taps that wait for this thread. drawing ahead stops for them, so a new ball never waits for frames
-    // that the tap is going to replace anyway
-    private static final AtomicInteger WAITING_DROPS = new AtomicInteger();
+    // taps per widget that wait for this thread. drawing ahead stops for them, so a new ball never waits
+    // for frames that the tap is going to replace anyway
+    private static final Map<Integer, AtomicInteger> WAITING_TAPS = new ConcurrentHashMap<>();
 
     private PlinkoImageStore() {
     }
 
     private static final class Game {
         // the game at the frame where the part that is on screen starts
-        PlinkoBoard board = new PlinkoBoard(ThreadLocalRandom.current().nextLong());
+        final PlinkoBoard board;
         // the frames of one set belong to one future. a tap changes the future, so it starts a new set
         String set;
         String previousSet;
+
+        Game(int level) {
+            board = new PlinkoBoard(ThreadLocalRandom.current().nextLong(), level);
+        }
     }
 
     static final class Chunk {
@@ -70,18 +78,42 @@ final class PlinkoImageStore {
         }
     }
 
-    // drops a ball. playing tells if the widget is animating, nowFrame is the frame it shows at this moment
+    // a tap on the widget: drops a ball if the level has one left.
+    // playing tells if the widget is animating, nowFrame is the frame it shows at this moment.
+    // the callback gets null when the tap changes nothing on screen
     static void drop(Context context, int appWidgetId, boolean playing, int nowFrame,
                      SettingsManager.Callback<Chunk> callback) {
-        WAITING_DROPS.incrementAndGet();
+        WAITING_TAPS.computeIfAbsent(appWidgetId, id -> new AtomicInteger()).incrementAndGet();
         EXECUTOR.execute(() -> {
-            WAITING_DROPS.decrementAndGet();
+            // fast taps are dropped together by the first of them, so the frames are drawn only once
+            AtomicInteger waiting = WAITING_TAPS.get(appWidgetId);
+            int taps = waiting != null ? waiting.getAndSet(0) : 0;
+            if (taps == 0) {
+                callback.onResult(null);
+                return;
+            }
             Game game = game(appWidgetId);
             int start = playing ? Math.max(game.board.frame(), nowFrame + LEAD_FRAMES) : game.board.frame();
+            PlinkoBoard board = game.board.copy();
+            board.advanceTo(start);
+            int dropped = 0;
+            for (int tap = 0; tap < taps; tap++) {
+                if (board.drop()) {
+                    dropped++;
+                }
+            }
+            // without a new ball only a game that stands still has something to show: it goes on
+            if (dropped == 0 && (playing || board.isIdle())) {
+                callback.onResult(null);
+                return;
+            }
+
             game.board.advanceTo(start);
-            game.board.drop();
+            for (int ball = 0; ball < dropped; ball++) {
+                game.board.drop();
+            }
             newSet(context, appWidgetId, game);
-            saveBest(appWidgetId, game);
+            saveProgress(appWidgetId, game);
 
             long startTime = SystemClock.elapsedRealtime();
             List<String> frames = renderFrames(context, appWidgetId, game, start, FIRST_CHUNK_FRAMES + OVERLAP_FRAMES, false);
@@ -92,17 +124,23 @@ final class PlinkoImageStore {
         });
     }
 
-    // the chunk that starts at this frame. with pause, or without balls, the chunk is only a still image
-    static void loadChunk(Context context, int appWidgetId, int start, boolean pause,
+    // the chunk that starts at this frame. with pause, or when nothing moves, the chunk is only a still image.
+    // active is asked right before the work: a tap can have replaced this animation in the meantime,
+    // and then the callback gets null
+    static void loadChunk(Context context, int appWidgetId, int start, boolean pause, BooleanSupplier active,
                           SettingsManager.Callback<Chunk> callback) {
         EXECUTOR.execute(() -> {
             Game game = game(appWidgetId);
+            if (!active.getAsBoolean() || start < game.board.frame()) {
+                callback.onResult(null);
+                return;
+            }
             game.board.advanceTo(start);
-            saveBest(appWidgetId, game);
+            saveProgress(appWidgetId, game);
             deleteFrames(context, game.set, start - KEEP_FRAMES);
 
-            if (pause || game.board.isEmpty()) {
-                List<String> still = renderFrames(context, appWidgetId, game, game.board.frame(), 1, false);
+            if (pause || game.board.isIdle()) {
+                List<String> still = renderFrames(context, appWidgetId, game, start, 1, false);
                 callback.onResult(new Chunk(start, 0, new ArrayList<>(), first(still), true));
                 return;
             }
@@ -112,14 +150,16 @@ final class PlinkoImageStore {
         });
     }
 
-    // draws the game as it is now with the current settings. the callback gets null if that failed
-    static void still(Context context, int appWidgetId, boolean resetBest, SettingsManager.Callback<String> callback) {
+    // draws the game as it is now with the current settings. the callback gets null if that failed.
+    // resetProgress starts again at level 1
+    static void still(Context context, int appWidgetId, boolean resetProgress, SettingsManager.Callback<String> callback) {
         EXECUTOR.execute(() -> {
-            Game game = game(appWidgetId);
-            if (resetBest) {
-                SettingsManager.writesync(SettingsManager.plinkoBestKey(appWidgetId), 0);
-                game.board.resetPeak();
+            if (resetProgress) {
+                SettingsManager.writesync(SettingsManager.plinkoLevelKey(appWidgetId), 1);
+                SettingsManager.writesync(SettingsManager.plinkoBestKey(appWidgetId), 1);
+                GAMES.remove(appWidgetId);
             }
+            Game game = game(appWidgetId);
             newSet(context, appWidgetId, game);
             callback.onResult(first(renderFrames(context, appWidgetId, game, game.board.frame(), 1, false)));
         });
@@ -127,9 +167,11 @@ final class PlinkoImageStore {
 
     static void deleteForWidget(Context context, int appWidgetId) {
         EXECUTOR.execute(() -> {
+            WAITING_TAPS.remove(appWidgetId);
             GAMES.remove(appWidgetId);
             deleteSets(context, appWidgetId, null, null);
             SettingsManager.resetData(SettingsManager.plinkoBestKey(appWidgetId));
+            SettingsManager.resetData(SettingsManager.plinkoLevelKey(appWidgetId));
             SettingsManager.removeWidgetSettings(appWidgetId);
         });
     }
@@ -146,10 +188,19 @@ final class PlinkoImageStore {
         });
     }
 
+    private static boolean tapWaiting() {
+        for (AtomicInteger taps : WAITING_TAPS.values()) {
+            if (taps.get() > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static Game game(int appWidgetId) {
         Game game = GAMES.get(appWidgetId);
         if (game == null) {
-            game = new Game();
+            game = new Game(readInt(SettingsManager.plinkoLevelKey(appWidgetId), 1));
             game.set = prefix(appWidgetId) + UUID.randomUUID();
             GAMES.put(appWidgetId, game);
         }
@@ -163,15 +214,24 @@ final class PlinkoImageStore {
         deleteSets(context, appWidgetId, game.set, game.previousSet);
     }
 
-    private static void saveBest(int appWidgetId, Game game) {
-        if (game.board.peak() > readBest(appWidgetId)) {
-            SettingsManager.writesync(SettingsManager.plinkoBestKey(appWidgetId), game.board.peak());
+    // the level is saved when it changes, so the game goes on there after the app was closed
+    private static void saveProgress(int appWidgetId, Game game) {
+        int level = game.board.level();
+        if (level != readInt(SettingsManager.plinkoLevelKey(appWidgetId), 1)) {
+            SettingsManager.writesync(SettingsManager.plinkoLevelKey(appWidgetId), level);
+        }
+        if (level > readBest(appWidgetId)) {
+            SettingsManager.writesync(SettingsManager.plinkoBestKey(appWidgetId), level);
         }
     }
 
     private static int readBest(int appWidgetId) {
-        Integer best = SettingsManager.readsync(SettingsManager.plinkoBestKey(appWidgetId));
-        return best != null ? best : 0;
+        return readInt(SettingsManager.plinkoBestKey(appWidgetId), 1);
+    }
+
+    private static int readInt(Preferences.Key<Integer> key, int defaultValue) {
+        Integer value = SettingsManager.readsync(key);
+        return value != null ? value : defaultValue;
     }
 
     static int readTheme(int appWidgetId) {
@@ -196,7 +256,7 @@ final class PlinkoImageStore {
         Bitmap bitmap = null;
         try {
             for (int frame = start; frame < start + count; frame++) {
-                if (ahead && WAITING_DROPS.get() > 0) {
+                if (ahead && tapWaiting()) {
                     break;
                 }
                 String name = game.set + "_" + frame + ".png";

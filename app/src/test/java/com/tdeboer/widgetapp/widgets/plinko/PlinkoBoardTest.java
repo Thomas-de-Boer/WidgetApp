@@ -1,28 +1,40 @@
 package com.tdeboer.widgetapp.widgets.plinko;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
 public class PlinkoBoardTest {
+    private static final int MIDDLE = 4;
+
     // path bits with this many rights land in that slot: 0 rights is the far left slot
     private static int pathWithRights(int rights) {
         return (1 << rights) - 1;
     }
 
     private static PlinkoBoard landOne(int rights) {
-        PlinkoBoard board = new PlinkoBoard(1);
+        PlinkoBoard board = new PlinkoBoard(1, 1);
         board.dropWithPath(pathWithRights(rights));
         board.advanceTo(PlinkoBoard.TRAVEL_FRAMES);
         return board;
     }
 
+    // plays until nothing moves, a game that never ends fails the test
+    private static void playOut(PlinkoBoard board) {
+        int limit = board.frame() + 200_000;
+        while (!board.isIdle()) {
+            board.step();
+            assertTrue("the game should end", board.frame() < limit);
+        }
+    }
+
     @Test
     public void middleSlotRemovesTheBall() {
-        PlinkoBoard board = landOne(4);
+        PlinkoBoard board = landOne(MIDDLE);
         assertEquals(0, board.inPlay());
-        assertTrue(board.isEmpty());
+        assertEquals(0, board.score());
     }
 
     @Test
@@ -38,38 +50,100 @@ public class PlinkoBoardTest {
     }
 
     @Test
-    public void newBallsLeaveTheTopOneByOne() {
-        PlinkoBoard board = landOne(0);
-        assertEquals(1, board.balls().size());
-        board.advanceTo(board.frame() + PlinkoBoard.RELEASE_GAP);
-        assertEquals(2, board.balls().size());
+    public void slotGivesItsValueAsPoints() {
+        assertEquals(3, landOne(0).score());
+        assertEquals(2, landOne(1).score());
+        assertEquals(1, landOne(3).score());
+    }
+
+    @Test
+    public void longerChainsMultiplyThePoints() {
+        assertEquals(1, PlinkoBoard.multiplier(1));
+        assertEquals(1, PlinkoBoard.multiplier(4));
+        assertEquals(2, PlinkoBoard.multiplier(5));
+        assertEquals(3, PlinkoBoard.multiplier(10));
+        assertEquals(5, PlinkoBoard.multiplier(25));
+        assertEquals(10, PlinkoBoard.multiplier(50));
+    }
+
+    @Test
+    public void onlyFiveBallsPerLevel() {
+        PlinkoBoard board = new PlinkoBoard(3, 1);
+        for (int i = 0; i < PlinkoBoard.BALLS_PER_LEVEL; i++) {
+            assertTrue(board.drop());
+        }
+        assertFalse(board.drop());
+        assertEquals(0, board.ballsLeft());
+    }
+
+    @Test
+    public void levelIsLostWithoutEnoughPoints() {
+        PlinkoBoard board = new PlinkoBoard(1, 3);
+        for (int i = 0; i < PlinkoBoard.BALLS_PER_LEVEL; i++) {
+            board.dropWithPath(pathWithRights(MIDDLE));
+        }
+        board.advanceTo(PlinkoBoard.TRAVEL_FRAMES);
+        assertEquals(PlinkoBoard.LOST, board.phase());
+        assertFalse(board.drop());
+
+        playOut(board);
+        assertEquals(3, board.level());
+        assertEquals(PlinkoBoard.BALLS_PER_LEVEL, board.ballsLeft());
+        assertEquals(0, board.score());
+        assertTrue(board.drop());
+    }
+
+    @Test
+    public void levelIsWonWithEnoughPoints() {
+        // find a game that reaches the target of level 1
+        for (long seed = 1; seed < 500; seed++) {
+            PlinkoBoard board = new PlinkoBoard(seed, 1);
+            boolean won = false;
+            while (board.drop()) {
+                // all at once
+            }
+            int limit = 200_000;
+            while (!board.isIdle() && limit-- > 0) {
+                board.step();
+                won |= board.phase() == PlinkoBoard.WON;
+            }
+            if (won) {
+                assertEquals(2, board.level());
+                assertEquals(PlinkoBoard.BALLS_PER_LEVEL, board.ballsLeft());
+                assertEquals(0, board.score());
+                return;
+            }
+        }
+        throw new AssertionError("no game reached the target of level 1");
     }
 
     @Test
     public void ballsStayWithinTheLimits() {
-        PlinkoBoard board = new PlinkoBoard(7);
-        int mostOnScreen = 0;
-        for (int i = 0; i < 200; i++) {
-            board.drop();
-            board.step();
-            assertTrue(board.balls().size() <= PlinkoBoard.MAX_ON_SCREEN);
-            assertTrue(board.inPlay() <= PlinkoBoard.MAX_IN_PLAY);
-            mostOnScreen = Math.max(mostOnScreen, board.balls().size());
+        for (long seed = 1; seed <= 200; seed++) {
+            PlinkoBoard board = new PlinkoBoard(seed, 1);
+            while (board.drop()) {
+                // all at once
+            }
+            while (!board.isIdle()) {
+                board.step();
+                assertTrue(board.balls().size() <= PlinkoBoard.MAX_ON_SCREEN);
+                assertTrue(board.inPlay() <= PlinkoBoard.MAX_IN_PLAY);
+            }
         }
-        assertEquals(PlinkoBoard.MAX_IN_PLAY, board.peak());
-        assertTrue(mostOnScreen >= 25);
     }
 
     @Test
     public void aCopyPlaysTheSameGame() {
-        PlinkoBoard board = new PlinkoBoard(42);
+        PlinkoBoard board = new PlinkoBoard(42, 1);
+        board.drop();
         board.drop();
         board.advanceTo(20);
         PlinkoBoard copy = board.copy();
         board.advanceTo(400);
         copy.advanceTo(400);
         assertEquals(board.inPlay(), copy.inPlay());
-        assertEquals(board.peak(), copy.peak());
+        assertEquals(board.score(), copy.score());
+        assertEquals(board.level(), copy.level());
         assertEquals(board.balls().size(), copy.balls().size());
         for (int i = 0; i < board.balls().size(); i++) {
             assertEquals(board.balls().get(i).path, copy.balls().get(i).path);
@@ -77,31 +151,72 @@ public class PlinkoBoardTest {
     }
 
     @Test
-    public void slotsFollowTheBellCurve() {
-        PlinkoBoard board = new PlinkoBoard(99);
-        int[] slots = new int[PlinkoBoard.SLOTS];
-        int samples = 20000;
-        for (int i = 0; i < samples; i++) {
-            board.drop();
-            slots[board.balls().get(board.balls().size() - 1).slot()]++;
-            board.clear();
-            board.advanceTo(board.frame() + PlinkoBoard.RELEASE_GAP);
-        }
-        // 8 rows of left or right: the middle gets 27%, the slots next to it 22%, the far sides 0.4%
-        assertEquals(0.273, slots[4] / (double) samples, 0.02);
-        assertEquals(0.219, slots[3] / (double) samples, 0.02);
-        assertEquals(0.219, slots[5] / (double) samples, 0.02);
-        assertEquals(0.004, slots[0] / (double) samples, 0.004);
-    }
-
-    @Test
     public void ballEndsInItsSlot() {
-        PlinkoBoard board = new PlinkoBoard(1);
+        PlinkoBoard board = new PlinkoBoard(1, 1);
         board.dropWithPath(pathWithRights(8));
         board.advanceTo(PlinkoBoard.TRAVEL_FRAMES - 1);
         float[] position = new float[2];
         board.position(board.balls().get(0), position);
         assertEquals(4f, position[0], 0.01f);
         assertTrue(position[1] > PlinkoBoard.ROWS - 1);
+    }
+
+    @Test
+    public void targetGrowsEveryLevel() {
+        assertEquals(10, PlinkoBoard.target(1));
+        for (int level = 1; level < 200; level++) {
+            assertTrue(PlinkoBoard.target(level + 1) >= PlinkoBoard.target(level));
+        }
+        assertTrue(PlinkoBoard.target(10) > PlinkoBoard.target(9));
+    }
+
+    // every chain has to end, and levels have to get harder slowly. the numbers are printed for tuning
+    @Test
+    public void chainsEndAndLevelsGetHarder() {
+        int games = 2000;
+        double[] passRate = new double[21];
+        long chainBalls = 0;
+        int chains = 0;
+        int longChains = 0;
+        for (int level = 1; level <= 20; level++) {
+            int won = 0;
+            for (int game = 0; game < games; game++) {
+                PlinkoBoard board = new PlinkoBoard(level * 100_003L + game * 7919L + 1, level);
+                while (board.drop()) {
+                    // all at once
+                }
+                int[] sizes = new int[PlinkoBoard.BALLS_PER_LEVEL];
+                int limit = 200_000;
+                while (board.phase() == PlinkoBoard.PLAYING) {
+                    for (int chain = 0; chain < sizes.length; chain++) {
+                        sizes[chain] = board.chainSize(chain);
+                    }
+                    board.step();
+                    assertTrue("the game should end", limit-- > 0);
+                }
+                for (int size : sizes) {
+                    chainBalls += size;
+                    chains++;
+                    if (size >= 25) {
+                        longChains++;
+                    }
+                }
+                if (board.phase() == PlinkoBoard.WON) {
+                    won++;
+                }
+            }
+            passRate[level] = won / (double) games;
+        }
+        double meanChain = chainBalls / (double) chains;
+        System.out.println("PLINKO lean " + PlinkoBoard.LEAN + ": pass rate level 1 " + passRate[1]
+                + ", 5 " + passRate[5] + ", 10 " + passRate[10] + ", 15 " + passRate[15] + ", 20 " + passRate[20]
+                + "; balls per chain " + meanChain + "; chains of 25 or more " + longChains / (double) chains);
+
+        assertTrue(meanChain > 4 && meanChain < 20);
+        assertTrue(passRate[1] > 0.7 && passRate[1] < 0.95);
+        assertTrue(passRate[5] < passRate[1]);
+        assertTrue(passRate[10] < passRate[5]);
+        assertTrue(passRate[20] < passRate[10]);
+        assertTrue(passRate[20] > 0.01);
     }
 }

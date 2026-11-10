@@ -23,6 +23,8 @@ final class PlinkoRenderer {
     private static final float BALL_RADIUS = 9f;
     private static final float SLOT_GAP = 3f;
     private static final int FLASH_FRAMES = 6;
+    private static final float MARGIN = 16f;
+    private static final float BAR_WIDTH = 150f;
 
     // per theme: background, pins, ball, text, minus slot, plus slots
     private static final int[][] THEMES = {
@@ -37,7 +39,8 @@ final class PlinkoRenderer {
     private final Paint ballPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint slotPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint labelPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint numberPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint shapePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Path star = new Path();
     private final float[] position = new float[2];
 
@@ -48,10 +51,7 @@ final class PlinkoRenderer {
         labelPaint.setTextAlign(Paint.Align.CENTER);
         labelPaint.setTextSize(24f);
         labelPaint.setTypeface(Typeface.DEFAULT_BOLD);
-
-        numberPaint.setColor(colors[3]);
-        numberPaint.setTextSize(30f);
-        numberPaint.setTypeface(Typeface.DEFAULT_BOLD);
+        textPaint.setTypeface(Typeface.DEFAULT_BOLD);
 
         // a star with five points, 11 pixels from the middle to a point
         for (int point = 0; point < 10; point++) {
@@ -83,7 +83,7 @@ final class PlinkoRenderer {
         return Math.max(0, Math.min(THEMES.length - 1, theme));
     }
 
-    // best is the highest number of balls this widget ever had in play
+    // best is the highest level this widget ever reached
     void drawFrame(PlinkoBoard board, int best, Canvas canvas) {
         canvas.drawBitmap(base, 0f, 0f, null);
 
@@ -99,23 +99,87 @@ final class PlinkoRenderer {
             canvas.drawCircle(pixelX(position[0]), pixelY(position[1]), BALL_RADIUS, ballPaint);
         }
 
-        // left: the balls in play, right: the best
-        canvas.drawCircle(24f, 30f, BALL_RADIUS, ballPaint);
-        numberPaint.setTextAlign(Paint.Align.LEFT);
-        canvas.drawText(String.valueOf(board.inPlay()), 42f, 41f, numberPaint);
+        for (PlinkoBoard.Popup popup : board.popups()) {
+            drawPopup(canvas, popup, board.frame() - popup.start);
+        }
 
-        String bestText = String.valueOf(Math.max(best, board.peak()));
-        numberPaint.setTextAlign(Paint.Align.RIGHT);
-        canvas.drawText(bestText, WIDTH - 16f, 41f, numberPaint);
-        float starX = WIDTH - 16f - numberPaint.measureText(bestText) - 18f;
-        canvas.save();
-        canvas.translate(starX, 30f);
-        canvas.drawPath(star, ballPaint);
-        canvas.restore();
+        drawStatus(canvas, board, Math.max(best, board.level()));
+        if (board.phase() != PlinkoBoard.PLAYING) {
+            drawBanner(canvas, board);
+        }
     }
 
     void recycle() {
         base.recycle();
+    }
+
+    // top left: the level, the points bar and the balls that are left. top right: the best level and the multiplier
+    private void drawStatus(Canvas canvas, PlinkoBoard board, int best) {
+        textPaint.setColor(colors[3]);
+        textPaint.setTextSize(30f);
+        textPaint.setTextAlign(Paint.Align.LEFT);
+        canvas.drawText(String.valueOf(board.level()), MARGIN, 41f, textPaint);
+
+        // the balls that are left to drop, next to the level
+        float dotsX = MARGIN + textPaint.measureText(String.valueOf(board.level())) + 18f;
+        for (int ball = 0; ball < PlinkoBoard.BALLS_PER_LEVEL; ball++) {
+            boolean left = ball < board.ballsLeft();
+            shapePaint.setColor(left ? colors[2] : blend(colors[0], colors[1], 0.45f));
+            canvas.drawCircle(dotsX + ball * 17f, 31f, 6f, shapePaint);
+        }
+
+        float progress = Math.min(1f, board.score() / (float) board.target());
+        shapePaint.setColor(blend(colors[0], colors[1], 0.35f));
+        canvas.drawRoundRect(MARGIN, 54f, MARGIN + BAR_WIDTH, 64f, 5f, 5f, shapePaint);
+        if (progress > 0f) {
+            shapePaint.setColor(progress >= 1f ? colors[5] : colors[2]);
+            canvas.drawRoundRect(MARGIN, 54f, MARGIN + Math.max(10f, BAR_WIDTH * progress), 64f, 5f, 5f, shapePaint);
+        }
+        textPaint.setTextSize(20f);
+        canvas.drawText(board.score() + " / " + board.target(), MARGIN, 88f, textPaint);
+
+        String bestText = String.valueOf(best);
+        textPaint.setTextSize(30f);
+        textPaint.setTextAlign(Paint.Align.RIGHT);
+        canvas.drawText(bestText, WIDTH - MARGIN, 41f, textPaint);
+        float starX = WIDTH - MARGIN - textPaint.measureText(bestText) - 18f;
+        canvas.save();
+        canvas.translate(starX, 30f);
+        canvas.drawPath(star, ballPaint);
+        canvas.restore();
+
+        int multiplier = board.liveMultiplier();
+        if (multiplier > 1) {
+            textPaint.setColor(colors[2]);
+            textPaint.setTextSize(22f + 2f * Math.min(multiplier, 10));
+            canvas.drawText("x" + multiplier, WIDTH - MARGIN, 92f, textPaint);
+        }
+    }
+
+    // the points float up from the slot and fade
+    private void drawPopup(Canvas canvas, PlinkoBoard.Popup popup, int age) {
+        float progress = age / (float) PlinkoBoard.POPUP_FRAMES;
+        textPaint.setColor(colors[3]);
+        textPaint.setAlpha(Math.round(255 * (1f - progress * progress)));
+        textPaint.setTextSize(22f);
+        textPaint.setTextAlign(Paint.Align.CENTER);
+        canvas.drawText("+" + popup.points, pixelX(popup.slot - 4f), pixelY(SLOT_TOP_Y) - 8f - 34f * progress, textPaint);
+        textPaint.setAlpha(255);
+    }
+
+    private void drawBanner(Canvas canvas, PlinkoBoard board) {
+        boolean won = board.phase() == PlinkoBoard.WON;
+        String text = won ? "LEVEL " + (board.level() + 1) : "TRY AGAIN";
+        textPaint.setTextSize(46f);
+        textPaint.setTextAlign(Paint.Align.CENTER);
+        float halfWidth = textPaint.measureText(text) / 2f + 28f;
+        float middleY = HEIGHT * 0.46f;
+
+        shapePaint.setColor(won ? colors[5] : colors[4]);
+        canvas.drawRoundRect(WIDTH / 2f - halfWidth, middleY - 42f, WIDTH / 2f + halfWidth, middleY + 42f,
+                20f, 20f, shapePaint);
+        textPaint.setColor(colors[0]);
+        canvas.drawText(text, WIDTH / 2f, middleY - (textPaint.ascent() + textPaint.descent()) / 2f, textPaint);
     }
 
     private void drawBase(Canvas canvas) {

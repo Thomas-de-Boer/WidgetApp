@@ -15,9 +15,9 @@
             app:iconSpaceReserved="false" />
 
         <Preference
-            app:key="plinko_reset_best"
-            app:title="Reset best"
-            app:summary="Set the number next to the star on this widget back to 0"
+            app:key="plinko_reset_progress"
+            app:title="Reset progress"
+            app:summary="Start this widget again at level 1 and clear its highest level"
             app:iconSpaceReserved="false" />
     </PreferenceCategory>
 

@@ -78,9 +78,16 @@ public class SettingsManager {
 
     private static final String PLINKO_BEST_PREFIX = "PLINKO_BEST_";
 
-//    the most balls a plinko widget ever had in play
+//    the highest level a plinko widget ever reached
     public static Preferences.Key<Integer> plinkoBestKey(int appWidgetId) {
         return PreferencesKeys.intKey(PLINKO_BEST_PREFIX + appWidgetId);
+    }
+
+    private static final String PLINKO_LEVEL_PREFIX = "PLINKO_LEVEL_";
+
+//    the level a plinko widget is at
+    public static Preferences.Key<Integer> plinkoLevelKey(int appWidgetId) {
+        return PreferencesKeys.intKey(PLINKO_LEVEL_PREFIX + appWidgetId);
     }
 
     private SettingsManager() { }
@@ -181,13 +188,13 @@ public class SettingsManager {
         }, executor);
     }
 
-//    resets the plinko colors and the best of every plinko widget
+//    resets the plinko colors and the progress of every plinko widget
     public static void resetPlinkoSettings(Runnable callback) {
         ListenableFuture<Preferences> future = getDataStore().updateDataAsync(preferences -> {
             MutablePreferences mutablePreferences = preferences.toMutablePreferences();
             mutablePreferences.remove(PLINKO_THEME);
             for (Preferences.Key<?> key : preferences.asMap().keySet()) {
-                if (key.getName().startsWith(PLINKO_BEST_PREFIX)) {
+                if (key.getName().startsWith(PLINKO_BEST_PREFIX) || key.getName().startsWith(PLINKO_LEVEL_PREFIX)) {
                     mutablePreferences.remove(key);
                 }
             }

@@ -1,19 +1,31 @@
 package com.tdeboer.widgetapp.widgets.plinko;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
 // the game itself, without any drawing. time moves in frames of the animation.
 // a ball bounces down 8 rows of pins and lands in one of 9 slots. the middle slot removes the ball,
 // the other slots turn it into that many new balls, which drop from the top again.
+// every level gives a few balls to drop and a number of points to reach.
 // the same seed and the same drops always give the same game, so a part can be played again exactly
 public final class PlinkoBoard {
     public static final int ROWS = 8;
     public static final int SLOTS = ROWS + 1;
     static final int[] SLOT_VALUES = {3, 2, 2, 1, -1, 1, 2, 2, 3};
+    static final int BALLS_PER_LEVEL = 5;
     static final int MAX_ON_SCREEN = 30;
     static final int MAX_IN_PLAY = 99;
+    // how much more often a ball bounces towards the middle than away from it.
+    // with this a ball makes a bit less than one new ball on average, so every chain ends.
+    // 0.04 gives chains of 9 balls on average, and 1 in 11 chains gets past 25 balls
+    static final float LEAN = 0.04f;
+
+    static final int PLAYING = 0;
+    static final int WON = 1;
+    static final int LOST = 2;
 
     // how long each part of the fall takes, in frames
     static final int DROP_FRAMES = 8;
@@ -22,6 +34,9 @@ public final class PlinkoBoard {
     static final int TRAVEL_FRAMES = DROP_FRAMES + (ROWS - 1) * ROW_FRAMES + FALL_FRAMES;
     // new balls leave the top one by one, so they don't all fall as one
     static final int RELEASE_GAP = 2;
+    // how long the message at the end of a level stays
+    static final int BANNER_FRAMES = 40;
+    static final int POPUP_FRAMES = 16;
 
     // positions are in board units: one unit between two pins next to each other, and one unit between rows.
     // x = 0 is the middle, y = 0 is the top pin row
@@ -36,11 +51,14 @@ public final class PlinkoBoard {
         // bit n is the direction at pin row n: 0 is left, 1 is right
         final int path;
         final float jitter;
+        // the dropped ball this one comes from, 0 for the first drop of the level
+        final int chain;
 
-        Ball(int start, int path, float jitter) {
+        Ball(int start, int path, float jitter, int chain) {
             this.start = start;
             this.path = path;
             this.jitter = jitter;
+            this.chain = chain;
         }
 
         int slot() {
@@ -48,34 +66,91 @@ public final class PlinkoBoard {
         }
     }
 
+    // the points that float up from a slot
+    static final class Popup {
+        final int slot;
+        final int points;
+        final int start;
+
+        Popup(int slot, int points, int start) {
+            this.slot = slot;
+            this.points = points;
+            this.start = start;
+        }
+    }
+
     private long random;
     private int frame;
     private final List<Ball> balls;
-    private int waiting;
+    // the chains of the balls that wait at the top
+    private final ArrayDeque<Integer> waiting;
+    private final List<Popup> popups;
     private int lastRelease;
-    private int peak;
     private final int[] lastHit;
+    private int lastEvent;
 
-    public PlinkoBoard(long seed) {
+    private int level;
+    private int ballsLeft;
+    private int score;
+    // how many balls every chain of this level has made so far
+    private final int[] chainSizes;
+    private int phase;
+    private int phaseEnd;
+
+    public PlinkoBoard(long seed, int level) {
         random = seed == 0 ? 0x9E3779B97F4A7C15L : seed;
         balls = new ArrayList<>();
+        waiting = new ArrayDeque<>();
+        popups = new ArrayList<>();
         lastRelease = -RELEASE_GAP;
         lastHit = new int[SLOTS];
-        java.util.Arrays.fill(lastHit, Integer.MIN_VALUE / 2);
+        Arrays.fill(lastHit, -1000);
+        lastEvent = -1000;
+        this.level = Math.max(1, level);
+        ballsLeft = BALLS_PER_LEVEL;
+        chainSizes = new int[BALLS_PER_LEVEL];
     }
 
     private PlinkoBoard(PlinkoBoard other) {
         random = other.random;
         frame = other.frame;
         balls = new ArrayList<>(other.balls);
-        waiting = other.waiting;
+        waiting = new ArrayDeque<>(other.waiting);
+        popups = new ArrayList<>(other.popups);
         lastRelease = other.lastRelease;
-        peak = other.peak;
         lastHit = other.lastHit.clone();
+        lastEvent = other.lastEvent;
+        level = other.level;
+        ballsLeft = other.ballsLeft;
+        score = other.score;
+        chainSizes = other.chainSizes.clone();
+        phase = other.phase;
+        phaseEnd = other.phaseEnd;
     }
 
     public PlinkoBoard copy() {
         return new PlinkoBoard(this);
+    }
+
+    // the points a level asks for: a quarter more every level.
+    // most games give few points and a few give very many, so only a target that grows this fast gets harder
+    static int target(int level) {
+        double points = Math.min(1e9, 10 * Math.pow(1.25, level - 1));
+        return (int) (points < 20 ? Math.round(points) : Math.round(points / 5) * 5);
+    }
+
+    // a chain that keeps going is worth more per ball
+    static int multiplier(int chainSize) {
+        if (chainSize >= 50) {
+            return 10;
+        } else if (chainSize >= 25) {
+            return 5;
+        } else if (chainSize >= 10) {
+            return 3;
+        } else if (chainSize >= 5) {
+            return 2;
+        }
+        return 1;
     }
 
     public int frame() {
@@ -86,18 +161,56 @@ public final class PlinkoBoard {
         return balls;
     }
 
+    List<Popup> popups() {
+        return popups;
+    }
+
+    public int level() {
+        return level;
+    }
+
+    int ballsLeft() {
+        return ballsLeft;
+    }
+
+    int score() {
+        return score;
+    }
+
+    int target() {
+        return target(level);
+    }
+
+    // how many balls this chain has made so far, the dropped ball included
+    int chainSize(int chain) {
+        return chainSizes[chain];
+    }
+
+    // PLAYING, or WON or LOST while the message at the end of a level shows
+    int phase() {
+        return phase;
+    }
+
     // the balls that fall and the balls that still wait at the top
     public int inPlay() {
-        return balls.size() + waiting;
+        return balls.size() + waiting.size();
     }
 
-    // the most balls in play at once during this game
-    public int peak() {
-        return peak;
+    // the highest multiplier of the chains that still have balls
+    int liveMultiplier() {
+        int best = 1;
+        for (Ball ball : balls) {
+            best = Math.max(best, multiplier(chainSizes[ball.chain]));
+        }
+        for (int chain : waiting) {
+            best = Math.max(best, multiplier(chainSizes[chain]));
+        }
+        return best;
     }
 
-    public boolean isEmpty() {
-        return inPlay() == 0;
+    // true when nothing moves anymore, so one still image is enough
+    public boolean isIdle() {
+        return phase == PLAYING && inPlay() == 0 && frame - lastEvent >= POPUP_FRAMES;
     }
 
     // frames since a ball landed in this slot, for a short flash
@@ -105,47 +218,52 @@ public final class PlinkoBoard {
         return frame - lastHit[slot];
     }
 
-    // the player drops a ball
-    public void drop() {
-        add(1);
+    // the player drops a ball. false when that is not possible now
+    public boolean drop() {
+        if (phase != PLAYING || ballsLeft == 0) {
+            return false;
+        }
+        waiting.add(takeBall());
         release();
-        peak = Math.max(peak, inPlay());
+        return true;
     }
 
-    // the best of this game starts again from the balls that are in play now
-    public void resetPeak() {
-        peak = inPlay();
-    }
-
-    // only for tests: removes every ball
-    void clear() {
-        balls.clear();
-        waiting = 0;
-    }
-
-    // only for tests: a ball with a known path
+    // only for tests: drops a ball with a known path
     void dropWithPath(int path) {
-        balls.add(new Ball(frame, path, 0f));
-        peak = Math.max(peak, inPlay());
+        balls.add(new Ball(frame, path, 0f, takeBall()));
+    }
+
+    // the chain that the next dropped ball starts
+    private int takeBall() {
+        int chain = BALLS_PER_LEVEL - ballsLeft;
+        ballsLeft--;
+        chainSizes[chain] = 1;
+        lastEvent = frame;
+        return chain;
     }
 
     public void step() {
         frame++;
+        List<Ball> landed = null;
         Iterator<Ball> iterator = balls.iterator();
         while (iterator.hasNext()) {
             Ball ball = iterator.next();
             if (frame - ball.start >= TRAVEL_FRAMES) {
                 iterator.remove();
-                int slot = ball.slot();
-                lastHit[slot] = frame;
-                int value = SLOT_VALUES[slot];
-                if (value > 0) {
-                    add(value);
+                if (landed == null) {
+                    landed = new ArrayList<>();
                 }
+                landed.add(ball);
             }
         }
+        if (landed != null) {
+            for (Ball ball : landed) {
+                land(ball);
+            }
+        }
+        popups.removeIf(popup -> frame - popup.start >= POPUP_FRAMES);
         release();
-        peak = Math.max(peak, inPlay());
+        updatePhase();
     }
 
     public void advanceTo(int targetFrame) {
@@ -154,18 +272,66 @@ public final class PlinkoBoard {
         }
     }
 
-    // balls above the limit are lost
-    private void add(int count) {
-        waiting += Math.max(0, Math.min(count, MAX_IN_PLAY - inPlay()));
+    private void land(Ball ball) {
+        int slot = ball.slot();
+        lastHit[slot] = frame;
+        lastEvent = frame;
+        int value = SLOT_VALUES[slot];
+        if (value > 0) {
+            int points = value * multiplier(chainSizes[ball.chain]);
+            score += points;
+            popups.add(new Popup(slot, points, frame));
+            // balls above the limit are lost
+            int added = Math.max(0, Math.min(value, MAX_IN_PLAY - inPlay()));
+            chainSizes[ball.chain] += added;
+            for (int i = 0; i < added; i++) {
+                waiting.add(ball.chain);
+            }
+        }
+    }
+
+    // a level ends when all balls are gone: won with enough points, lost without balls to drop
+    private void updatePhase() {
+        if (phase == PLAYING) {
+            boolean started = ballsLeft < BALLS_PER_LEVEL;
+            if (started && inPlay() == 0 && (score >= target() || ballsLeft == 0)) {
+                phase = score >= target() ? WON : LOST;
+                phaseEnd = frame + BANNER_FRAMES;
+            }
+        } else if (frame >= phaseEnd) {
+            if (phase == WON) {
+                level++;
+            }
+            phase = PLAYING;
+            ballsLeft = BALLS_PER_LEVEL;
+            score = 0;
+            Arrays.fill(chainSizes, 0);
+            lastEvent = frame - POPUP_FRAMES;
+        }
     }
 
     private void release() {
-        if (waiting > 0 && balls.size() < MAX_ON_SCREEN && frame - lastRelease >= RELEASE_GAP) {
+        if (!waiting.isEmpty() && balls.size() < MAX_ON_SCREEN && frame - lastRelease >= RELEASE_GAP) {
             float jitter = (nextFloat() * 2f - 1f) * DROP_SPREAD;
-            balls.add(new Ball(frame, (int) (nextLong() & ((1 << ROWS) - 1)), jitter));
-            waiting--;
+            balls.add(new Ball(frame, nextPath(), jitter, waiting.remove()));
             lastRelease = frame;
         }
+    }
+
+    // left or right at every row, with a small lean towards the middle
+    private int nextPath() {
+        int path = 0;
+        int rights = 0;
+        for (int row = 0; row < ROWS; row++) {
+            // twice the distance from the middle: negative is left of it
+            int side = 2 * rights - row;
+            float chanceRight = side < 0 ? 0.5f + LEAN : side > 0 ? 0.5f - LEAN : 0.5f;
+            if (nextFloat() < chanceRight) {
+                path |= 1 << row;
+                rights++;
+            }
+        }
+        return path;
     }
 
     // where the ball is in board units at the current frame, written into out[0] (x) and out[1] (y)

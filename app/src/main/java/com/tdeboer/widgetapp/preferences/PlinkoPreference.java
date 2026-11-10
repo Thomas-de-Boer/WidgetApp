@@ -24,7 +24,7 @@ public class PlinkoPreference extends PreferenceFragmentCompat {
 
         appWidgetId = requireArguments().getInt(WidgetSettingsFragment.ARGUMENT_WIDGET_ID);
         theme = findPreference("plinko_theme");
-        Preference resetBest = findPreference("plinko_reset_best");
+        Preference resetProgress = findPreference("plinko_reset_progress");
         // the writes finish on another thread, the screen can already be closed by then
         Context context = requireContext().getApplicationContext();
 
@@ -35,9 +35,9 @@ public class PlinkoPreference extends PreferenceFragmentCompat {
                 return true;
             });
         }
-        if (resetBest != null) {
-            resetBest.setOnPreferenceClickListener(preference -> {
-                WidgetProviderPlinko.resetBest(context, appWidgetId);
+        if (resetProgress != null) {
+            resetProgress.setOnPreferenceClickListener(preference -> {
+                WidgetProviderPlinko.resetProgress(context, appWidgetId);
                 return true;
             });
         }
