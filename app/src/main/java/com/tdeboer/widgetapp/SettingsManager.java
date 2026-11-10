@@ -90,6 +90,13 @@ public class SettingsManager {
         return PreferencesKeys.intKey(PLINKO_LEVEL_PREFIX + appWidgetId);
     }
 
+    private static final String PLINKO_LIVES_PREFIX = "PLINKO_LIVES_";
+
+//    the lives a plinko widget has left
+    public static Preferences.Key<Integer> plinkoLivesKey(int appWidgetId) {
+        return PreferencesKeys.intKey(PLINKO_LIVES_PREFIX + appWidgetId);
+    }
+
     private SettingsManager() { }
 
 //    fill the dataStore variable with the actual instance of dataStore with filename: 'settings'
@@ -194,7 +201,8 @@ public class SettingsManager {
             MutablePreferences mutablePreferences = preferences.toMutablePreferences();
             mutablePreferences.remove(PLINKO_THEME);
             for (Preferences.Key<?> key : preferences.asMap().keySet()) {
-                if (key.getName().startsWith(PLINKO_BEST_PREFIX) || key.getName().startsWith(PLINKO_LEVEL_PREFIX)) {
+                if (key.getName().startsWith(PLINKO_BEST_PREFIX) || key.getName().startsWith(PLINKO_LEVEL_PREFIX)
+                        || key.getName().startsWith(PLINKO_LIVES_PREFIX)) {
                     mutablePreferences.remove(key);
                 }
             }

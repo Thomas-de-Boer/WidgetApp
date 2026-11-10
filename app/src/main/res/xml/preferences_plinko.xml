@@ -17,7 +17,7 @@
         <Preference
             app:key="plinko_reset_progress"
             app:title="Reset progress"
-            app:summary="Start this widget again at level 1 and clear its highest level"
+            app:summary="Start this widget again at level 1 with 3 lives and clear its highest level"
             app:iconSpaceReserved="false" />
     </PreferenceCategory>
 

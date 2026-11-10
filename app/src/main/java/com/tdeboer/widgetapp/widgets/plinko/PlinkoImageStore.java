@@ -29,12 +29,12 @@ import java.util.function.BooleanSupplier;
 // all work runs on one thread, so the games are only touched there
 final class PlinkoImageStore {
     // the first part after a tap is short, so the new ball shows up quickly
-    static final int FIRST_CHUNK_FRAMES = 15;
+    static final int FIRST_CHUNK_FRAMES = 10;
     static final int CHUNK_FRAMES = 30;
     // extra frames after a chunk, shown when the next chunk arrives a little late
     static final int OVERLAP_FRAMES = 8;
     // a ball that is dropped while others fall starts this many frames later, which is the time drawing takes
-    static final int LEAD_FRAMES = 12;
+    static final int LEAD_FRAMES = 6;
     private static final int KEEP_FRAMES = 2 * (CHUNK_FRAMES + OVERLAP_FRAMES);
     private static final String DIRECTORY = "plinko_widget";
     private static final String TAG = "PlinkoImageStore";
@@ -54,8 +54,8 @@ final class PlinkoImageStore {
         String set;
         String previousSet;
 
-        Game(int level) {
-            board = new PlinkoBoard(ThreadLocalRandom.current().nextLong(), level);
+        Game(int level, int lives) {
+            board = new PlinkoBoard(ThreadLocalRandom.current().nextLong(), level, lives);
         }
     }
 
@@ -151,11 +151,12 @@ final class PlinkoImageStore {
     }
 
     // draws the game as it is now with the current settings. the callback gets null if that failed.
-    // resetProgress starts again at level 1
+    // resetProgress starts again at level 1 with all lives
     static void still(Context context, int appWidgetId, boolean resetProgress, SettingsManager.Callback<String> callback) {
         EXECUTOR.execute(() -> {
             if (resetProgress) {
                 SettingsManager.writesync(SettingsManager.plinkoLevelKey(appWidgetId), 1);
+                SettingsManager.writesync(SettingsManager.plinkoLivesKey(appWidgetId), PlinkoBoard.START_LIVES);
                 SettingsManager.writesync(SettingsManager.plinkoBestKey(appWidgetId), 1);
                 GAMES.remove(appWidgetId);
             }
@@ -172,6 +173,7 @@ final class PlinkoImageStore {
             deleteSets(context, appWidgetId, null, null);
             SettingsManager.resetData(SettingsManager.plinkoBestKey(appWidgetId));
             SettingsManager.resetData(SettingsManager.plinkoLevelKey(appWidgetId));
+            SettingsManager.resetData(SettingsManager.plinkoLivesKey(appWidgetId));
             SettingsManager.removeWidgetSettings(appWidgetId);
         });
     }
@@ -200,7 +202,8 @@ final class PlinkoImageStore {
     private static Game game(int appWidgetId) {
         Game game = GAMES.get(appWidgetId);
         if (game == null) {
-            game = new Game(readInt(SettingsManager.plinkoLevelKey(appWidgetId), 1));
+            game = new Game(readInt(SettingsManager.plinkoLevelKey(appWidgetId), 1),
+                    readInt(SettingsManager.plinkoLivesKey(appWidgetId), PlinkoBoard.START_LIVES));
             game.set = prefix(appWidgetId) + UUID.randomUUID();
             GAMES.put(appWidgetId, game);
         }
@@ -214,8 +217,12 @@ final class PlinkoImageStore {
         deleteSets(context, appWidgetId, game.set, game.previousSet);
     }
 
-    // the level is saved when it changes, so the game goes on there after the app was closed
+    // the level and lives are saved when they change, so the game goes on there after the app was closed
     private static void saveProgress(int appWidgetId, Game game) {
+        int lives = game.board.lives();
+        if (lives != readInt(SettingsManager.plinkoLivesKey(appWidgetId), PlinkoBoard.START_LIVES)) {
+            SettingsManager.writesync(SettingsManager.plinkoLivesKey(appWidgetId), lives);
+        }
         int level = game.board.level();
         if (level != readInt(SettingsManager.plinkoLevelKey(appWidgetId), 1)) {
             SettingsManager.writesync(SettingsManager.plinkoLevelKey(appWidgetId), level);

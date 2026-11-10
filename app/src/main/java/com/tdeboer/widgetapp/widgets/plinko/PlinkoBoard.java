@@ -20,12 +20,15 @@ public final class PlinkoBoard {
     static final int MAX_IN_PLAY = 99;
     // how much more often a ball bounces towards the middle than away from it.
     // with this a ball makes a bit less than one new ball on average, so every chain ends.
-    // 0.04 gives chains of 9 balls on average, and 1 in 11 chains gets past 25 balls
-    static final float LEAN = 0.04f;
+    // 0.06 gives chains of 6 balls on average, and 1 in 10 chains gets to 15 balls
+    static final float LEAN = 0.06f;
 
     static final int PLAYING = 0;
     static final int WON = 1;
     static final int LOST = 2;
+    // the last life is gone: the game starts again at level 1
+    static final int GAME_OVER = 3;
+    static final int START_LIVES = 3;
 
     // how long each part of the fall takes, in frames
     static final int DROP_FRAMES = 8;
@@ -94,10 +97,11 @@ public final class PlinkoBoard {
     private int score;
     // how many balls every chain of this level has made so far
     private final int[] chainSizes;
+    private int lives;
     private int phase;
     private int phaseEnd;
 
-    public PlinkoBoard(long seed, int level) {
+    public PlinkoBoard(long seed, int level, int lives) {
         random = seed == 0 ? 0x9E3779B97F4A7C15L : seed;
         balls = new ArrayList<>();
         waiting = new ArrayDeque<>();
@@ -107,6 +111,7 @@ public final class PlinkoBoard {
         Arrays.fill(lastHit, -1000);
         lastEvent = -1000;
         this.level = Math.max(1, level);
+        this.lives = Math.max(1, Math.min(START_LIVES, lives));
         ballsLeft = BALLS_PER_LEVEL;
         chainSizes = new int[BALLS_PER_LEVEL];
     }
@@ -124,6 +129,7 @@ public final class PlinkoBoard {
         ballsLeft = other.ballsLeft;
         score = other.score;
         chainSizes = other.chainSizes.clone();
+        lives = other.lives;
         phase = other.phase;
         phaseEnd = other.phaseEnd;
     }
@@ -132,22 +138,23 @@ public final class PlinkoBoard {
         return new PlinkoBoard(this);
     }
 
-    // the points a level asks for: a quarter more every level.
+    // the points a level asks for: a fifth more every level.
     // most games give few points and a few give very many, so only a target that grows this fast gets harder
     static int target(int level) {
-        double points = Math.min(1e9, 10 * Math.pow(1.25, level - 1));
+        double points = Math.min(1e9, 10 * Math.pow(1.2, level - 1));
         return (int) (points < 20 ? Math.round(points) : Math.round(points / 5) * 5);
     }
 
-    // a chain that keeps going is worth more per ball
+    // a chain that keeps going is worth more points per ball. the first step is reached by 1 in 10 chains,
+    // the last by 1 in 600
     static int multiplier(int chainSize) {
-        if (chainSize >= 50) {
+        if (chainSize >= 100) {
             return 10;
-        } else if (chainSize >= 25) {
+        } else if (chainSize >= 60) {
             return 5;
-        } else if (chainSize >= 10) {
+        } else if (chainSize >= 30) {
             return 3;
-        } else if (chainSize >= 5) {
+        } else if (chainSize >= 15) {
             return 2;
         }
         return 1;
@@ -169,6 +176,11 @@ public final class PlinkoBoard {
         return level;
     }
 
+    // a lost level costs a life
+    public int lives() {
+        return lives;
+    }
+
     int ballsLeft() {
         return ballsLeft;
     }
@@ -186,7 +198,7 @@ public final class PlinkoBoard {
         return chainSizes[chain];
     }
 
-    // PLAYING, or WON or LOST while the message at the end of a level shows
+    // PLAYING, or WON, LOST or GAME_OVER while the message at the end of a level shows
     int phase() {
         return phase;
     }
@@ -295,12 +307,20 @@ public final class PlinkoBoard {
         if (phase == PLAYING) {
             boolean started = ballsLeft < BALLS_PER_LEVEL;
             if (started && inPlay() == 0 && (score >= target() || ballsLeft == 0)) {
-                phase = score >= target() ? WON : LOST;
+                if (score >= target()) {
+                    phase = WON;
+                } else {
+                    lives--;
+                    phase = lives == 0 ? GAME_OVER : LOST;
+                }
                 phaseEnd = frame + BANNER_FRAMES;
             }
         } else if (frame >= phaseEnd) {
             if (phase == WON) {
                 level++;
+            } else if (phase == GAME_OVER) {
+                level = 1;
+                lives = START_LIVES;
             }
             phase = PLAYING;
             ballsLeft = BALLS_PER_LEVEL;

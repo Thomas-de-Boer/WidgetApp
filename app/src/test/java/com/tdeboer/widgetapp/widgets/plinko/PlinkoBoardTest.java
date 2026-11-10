@@ -15,7 +15,7 @@ public class PlinkoBoardTest {
     }
 
     private static PlinkoBoard landOne(int rights) {
-        PlinkoBoard board = new PlinkoBoard(1, 1);
+        PlinkoBoard board = new PlinkoBoard(1, 1, 3);
         board.dropWithPath(pathWithRights(rights));
         board.advanceTo(PlinkoBoard.TRAVEL_FRAMES);
         return board;
@@ -59,16 +59,16 @@ public class PlinkoBoardTest {
     @Test
     public void longerChainsMultiplyThePoints() {
         assertEquals(1, PlinkoBoard.multiplier(1));
-        assertEquals(1, PlinkoBoard.multiplier(4));
-        assertEquals(2, PlinkoBoard.multiplier(5));
-        assertEquals(3, PlinkoBoard.multiplier(10));
-        assertEquals(5, PlinkoBoard.multiplier(25));
-        assertEquals(10, PlinkoBoard.multiplier(50));
+        assertEquals(1, PlinkoBoard.multiplier(14));
+        assertEquals(2, PlinkoBoard.multiplier(15));
+        assertEquals(3, PlinkoBoard.multiplier(30));
+        assertEquals(5, PlinkoBoard.multiplier(60));
+        assertEquals(10, PlinkoBoard.multiplier(100));
     }
 
     @Test
     public void onlyFiveBallsPerLevel() {
-        PlinkoBoard board = new PlinkoBoard(3, 1);
+        PlinkoBoard board = new PlinkoBoard(3, 1, 3);
         for (int i = 0; i < PlinkoBoard.BALLS_PER_LEVEL; i++) {
             assertTrue(board.drop());
         }
@@ -78,7 +78,7 @@ public class PlinkoBoardTest {
 
     @Test
     public void levelIsLostWithoutEnoughPoints() {
-        PlinkoBoard board = new PlinkoBoard(1, 3);
+        PlinkoBoard board = new PlinkoBoard(1, 3, 3);
         for (int i = 0; i < PlinkoBoard.BALLS_PER_LEVEL; i++) {
             board.dropWithPath(pathWithRights(MIDDLE));
         }
@@ -88,16 +88,34 @@ public class PlinkoBoardTest {
 
         playOut(board);
         assertEquals(3, board.level());
+        assertEquals(2, board.lives());
         assertEquals(PlinkoBoard.BALLS_PER_LEVEL, board.ballsLeft());
         assertEquals(0, board.score());
         assertTrue(board.drop());
     }
 
     @Test
+    public void lastLifeStartsAgainAtLevelOne() {
+        PlinkoBoard board = new PlinkoBoard(1, 6, 3);
+        for (int life = PlinkoBoard.START_LIVES; life > 0; life--) {
+            assertEquals(6, board.level());
+            assertEquals(life, board.lives());
+            for (int i = 0; i < PlinkoBoard.BALLS_PER_LEVEL; i++) {
+                board.dropWithPath(pathWithRights(MIDDLE));
+            }
+            board.advanceTo(board.frame() + PlinkoBoard.TRAVEL_FRAMES);
+            assertEquals(life == 1 ? PlinkoBoard.GAME_OVER : PlinkoBoard.LOST, board.phase());
+            playOut(board);
+        }
+        assertEquals(1, board.level());
+        assertEquals(PlinkoBoard.START_LIVES, board.lives());
+    }
+
+    @Test
     public void levelIsWonWithEnoughPoints() {
         // find a game that reaches the target of level 1
         for (long seed = 1; seed < 500; seed++) {
-            PlinkoBoard board = new PlinkoBoard(seed, 1);
+            PlinkoBoard board = new PlinkoBoard(seed, 1, 3);
             boolean won = false;
             while (board.drop()) {
                 // all at once
@@ -120,7 +138,7 @@ public class PlinkoBoardTest {
     @Test
     public void ballsStayWithinTheLimits() {
         for (long seed = 1; seed <= 200; seed++) {
-            PlinkoBoard board = new PlinkoBoard(seed, 1);
+            PlinkoBoard board = new PlinkoBoard(seed, 1, 3);
             while (board.drop()) {
                 // all at once
             }
@@ -134,7 +152,7 @@ public class PlinkoBoardTest {
 
     @Test
     public void aCopyPlaysTheSameGame() {
-        PlinkoBoard board = new PlinkoBoard(42, 1);
+        PlinkoBoard board = new PlinkoBoard(42, 1, 3);
         board.drop();
         board.drop();
         board.advanceTo(20);
@@ -152,7 +170,7 @@ public class PlinkoBoardTest {
 
     @Test
     public void ballEndsInItsSlot() {
-        PlinkoBoard board = new PlinkoBoard(1, 1);
+        PlinkoBoard board = new PlinkoBoard(1, 1, 3);
         board.dropWithPath(pathWithRights(8));
         board.advanceTo(PlinkoBoard.TRAVEL_FRAMES - 1);
         float[] position = new float[2];
@@ -181,7 +199,7 @@ public class PlinkoBoardTest {
         for (int level = 1; level <= 20; level++) {
             int won = 0;
             for (int game = 0; game < games; game++) {
-                PlinkoBoard board = new PlinkoBoard(level * 100_003L + game * 7919L + 1, level);
+                PlinkoBoard board = new PlinkoBoard(level * 100_003L + game * 7919L + 1, level, 3);
                 while (board.drop()) {
                     // all at once
                 }
@@ -197,7 +215,7 @@ public class PlinkoBoardTest {
                 for (int size : sizes) {
                     chainBalls += size;
                     chains++;
-                    if (size >= 25) {
+                    if (size >= 15) {
                         longChains++;
                     }
                 }
@@ -210,13 +228,14 @@ public class PlinkoBoardTest {
         double meanChain = chainBalls / (double) chains;
         System.out.println("PLINKO lean " + PlinkoBoard.LEAN + ": pass rate level 1 " + passRate[1]
                 + ", 5 " + passRate[5] + ", 10 " + passRate[10] + ", 15 " + passRate[15] + ", 20 " + passRate[20]
-                + "; balls per chain " + meanChain + "; chains of 25 or more " + longChains / (double) chains);
+                + "; balls per chain " + meanChain + "; chains of 15 or more " + longChains / (double) chains);
 
-        assertTrue(meanChain > 4 && meanChain < 20);
+        assertTrue(meanChain > 4 && meanChain < 8);
+        assertTrue(longChains / (double) chains < 0.15);
         assertTrue(passRate[1] > 0.7 && passRate[1] < 0.95);
         assertTrue(passRate[5] < passRate[1]);
         assertTrue(passRate[10] < passRate[5]);
         assertTrue(passRate[20] < passRate[10]);
-        assertTrue(passRate[20] > 0.01);
+        assertTrue(passRate[15] > 0.01);
     }
 }

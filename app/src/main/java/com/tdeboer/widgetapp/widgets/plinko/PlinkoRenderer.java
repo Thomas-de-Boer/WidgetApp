@@ -42,6 +42,7 @@ final class PlinkoRenderer {
     private final Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint shapePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Path star = new Path();
+    private final Path heart = new Path();
     private final float[] position = new float[2];
 
     PlinkoRenderer(int theme) {
@@ -66,6 +67,12 @@ final class PlinkoRenderer {
             }
         }
         star.close();
+
+        // a heart of 20 pixels wide around its middle
+        heart.moveTo(0f, 9f);
+        heart.cubicTo(-14f, -1f, -9f, -11f, 0f, -4f);
+        heart.cubicTo(9f, -11f, 14f, -1f, 0f, 9f);
+        heart.close();
 
         base = Bitmap.createBitmap(WIDTH, HEIGHT, Bitmap.Config.ARGB_8888);
         drawBase(new Canvas(base));
@@ -113,7 +120,8 @@ final class PlinkoRenderer {
         base.recycle();
     }
 
-    // top left: the level, the points bar and the balls that are left. top right: the best level and the multiplier
+    // top left: the level, the balls that are left and the points bar.
+    // top right: the highest level, the lives and the multiplier of the longest chain
     private void drawStatus(Canvas canvas, PlinkoBoard board, int best) {
         textPaint.setColor(colors[3]);
         textPaint.setTextSize(30f);
@@ -148,11 +156,20 @@ final class PlinkoRenderer {
         canvas.drawPath(star, ballPaint);
         canvas.restore();
 
+        // the lives under the best level: a lost level empties one
+        for (int life = 0; life < PlinkoBoard.START_LIVES; life++) {
+            shapePaint.setColor(life < board.lives() ? colors[4] : blend(colors[0], colors[1], 0.45f));
+            canvas.save();
+            canvas.translate(WIDTH - MARGIN - 10f - life * 26f, 64f);
+            canvas.drawPath(heart, shapePaint);
+            canvas.restore();
+        }
+
         int multiplier = board.liveMultiplier();
         if (multiplier > 1) {
             textPaint.setColor(colors[2]);
             textPaint.setTextSize(22f + 2f * Math.min(multiplier, 10));
-            canvas.drawText("x" + multiplier, WIDTH - MARGIN, 92f, textPaint);
+            canvas.drawText("x" + multiplier, WIDTH - MARGIN, 112f, textPaint);
         }
     }
 
@@ -163,13 +180,18 @@ final class PlinkoRenderer {
         textPaint.setAlpha(Math.round(255 * (1f - progress * progress)));
         textPaint.setTextSize(22f);
         textPaint.setTextAlign(Paint.Align.CENTER);
-        canvas.drawText("+" + popup.points, pixelX(popup.slot - 4f), pixelY(SLOT_TOP_Y) - 8f - 34f * progress, textPaint);
+        int value = PlinkoBoard.SLOT_VALUES[popup.slot];
+        int multiplier = popup.points / value;
+        // the slot gives its own number of balls, only the points are multiplied
+        String text = multiplier > 1 ? value + " x" + multiplier : "+" + value;
+        canvas.drawText(text, pixelX(popup.slot - 4f), pixelY(SLOT_TOP_Y) - 8f - 34f * progress, textPaint);
         textPaint.setAlpha(255);
     }
 
     private void drawBanner(Canvas canvas, PlinkoBoard board) {
         boolean won = board.phase() == PlinkoBoard.WON;
-        String text = won ? "LEVEL " + (board.level() + 1) : "TRY AGAIN";
+        String text = won ? "LEVEL " + (board.level() + 1)
+                : board.phase() == PlinkoBoard.GAME_OVER ? "GAME OVER" : "TRY AGAIN";
         textPaint.setTextSize(46f);
         textPaint.setTextAlign(Paint.Align.CENTER);
         float halfWidth = textPaint.measureText(text) / 2f + 28f;
