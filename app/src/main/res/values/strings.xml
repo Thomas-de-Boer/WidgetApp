@@ -60,6 +60,17 @@
     <string name="info_maze">Shows a maze that is generated just for you, with exactly one way out. Press Solve to watch the path being drawn, or New maze to get another one. Every 30 minutes the widget makes a new maze by itself. In the settings, you can choose the size, solver speed, style and colors.</string>
     <string name="delete">Delete</string>
 
+    <string name="update_available">Version %1$s is available</string>
+    <string name="update_button">Update</string>
+    <string name="update_retry">Try again</string>
+    <string name="update_dismiss">Hide</string>
+    <string name="update_downloading">Downloading version %1$s… %2$d%%</string>
+    <string name="update_installing">Installing version %1$s…</string>
+    <string name="update_permission">Allow Widget App to install apps, then come back here to update</string>
+    <string name="update_failed_download">The update could not be downloaded</string>
+    <string name="update_failed_install">The update could not be installed</string>
+    <string name="update_failed_install_reason">The update could not be installed: %1$s</string>
+
     <string-array name="generated_palette_names">
         <item>Ocean sunset</item>
         <item>Violet sunset</item>

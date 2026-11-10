@@ -8,15 +8,86 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <FrameLayout
-        android:id="@+id/flFragment"
+    <!-- the update bar sits above the screens, so it pushes them down instead of covering them -->
+    <LinearLayout
+        android:id="@+id/mainContent"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:orientation="vertical"
         app:layout_constraintBottom_toTopOf="@+id/bottomNavigationView"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/updateBar"
+            style="?attr/materialCardViewFilledStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/screen_margin"
+            android:layout_marginTop="@dimen/space_small"
+            android:layout_marginEnd="@dimen/screen_margin"
+            android:visibility="gone"
+            app:cardBackgroundColor="?attr/colorPrimaryContainer"
+            tools:visibility="visible">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:minHeight="@dimen/touch_target"
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/space_medium"
+                android:paddingEnd="@dimen/space_small"
+                android:paddingTop="@dimen/space_small"
+                android:paddingBottom="@dimen/space_small">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/updateText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="?attr/textAppearanceBodyMedium"
+                        android:textColor="?attr/colorOnPrimaryContainer"
+                        tools:text="Version 1.2 is available" />
+
+                    <com.google.android.material.progressindicator.LinearProgressIndicator
+                        android:id="@+id/updateProgress"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_small"
+                        android:visibility="gone" />
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/updateButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/space_small"
+                    android:text="@string/update_button" />
+
+                <ImageButton
+                    android:id="@+id/updateDismiss"
+                    android:layout_width="@dimen/touch_target"
+                    android:layout_height="@dimen/touch_target"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/update_dismiss"
+                    android:src="@drawable/close_icon"
+                    app:tint="?attr/colorOnPrimaryContainer" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <FrameLayout
+            android:id="@+id/flFragment"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+    </LinearLayout>
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavigationView"
