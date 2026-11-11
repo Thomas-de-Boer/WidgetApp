@@ -23,10 +23,14 @@ public class WidgetProviderPlinko extends AppWidgetProvider {
     private static final String ACTION_CHUNK = "com.tdeboer.widgetapp.PLINKO_CHUNK";
     private static final String EXTRA_RUN = "plinko_run";
     private static final String EXTRA_START = "plinko_start";
+    private static final String EXTRA_INDEX = "plinko_index";
     private static final String EXTRA_DUE = "plinko_due";
     // the time the launcher needs to show a new chunk
     private static final long APPLY_MILLIS = 40L;
     private static final long FLIP = PlinkoRenderer.FLIP_INTERVAL_MILLIS;
+    // a late chunk starts this many frames past the frame that is on screen, the time drawing takes
+    private static final int CATCH_UP_FRAMES = 8;
+    private static final int MAX_JUMP_FRAMES = 250;
     private static final Handler HANDLER = new Handler(Looper.getMainLooper());
     // the running animation per widget; removing an entry cancels the rest of it
     private static final Map<Integer, Run> RUNS = new ConcurrentHashMap<>();
@@ -73,6 +77,7 @@ public class WidgetProviderPlinko extends AppWidgetProvider {
             int run = intent.getIntExtra(EXTRA_RUN, 0);
             if (isActive(appWidgetId, run)) {
                 playChunk(context, manager, appWidgetId, run, intent.getIntExtra(EXTRA_START, 0),
+                        intent.getIntExtra(EXTRA_INDEX, 2),
                         intent.getLongExtra(EXTRA_DUE, 0L));
             }
         }
@@ -142,24 +147,36 @@ public class WidgetProviderPlinko extends AppWidgetProvider {
                     ? new Run(run, current.start, current.shownAt, current.frames)
                     : new Run(run, 0, 0L, 0));
 
-            RemoteViews views = WidgetHelperPlinko.makeAnimatedView(context, appWidgetId, chunk.frames);
-            // the new chunk starts a few frames ahead, so it waits until the old one is that far
+            // the new chunk starts a few frames ahead, so it waits until the old one is that far.
+            // when drawing took longer than that, it skips the frames that are already over
             long wait = playing
                     ? now + PlinkoImageStore.LEAD_FRAMES * FLIP - APPLY_MILLIS - SystemClock.elapsedRealtime()
                     : 0L;
-            HANDLER.postDelayed(() -> show(context, manager, appWidgetId, run, chunk, views, result),
+            int skip = skippedFrames(-wait, chunk);
+            RemoteViews views = WidgetHelperPlinko.makeAnimatedView(context, appWidgetId, chunk.frames, skip);
+            HANDLER.postDelayed(() -> show(context, manager, appWidgetId, run, chunk, skip, views, result),
                     Math.max(0L, wait));
         });
     }
 
     // every chunk is its own broadcast, so a game can take as long as it needs
-    private void playChunk(Context context, AppWidgetManager manager, int appWidgetId, int run, int start, long due) {
+    private void playChunk(Context context, AppWidgetManager manager, int appWidgetId, int run, int start, int index,
+                           long due) {
         PendingResult result = goAsync();
         PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
         // nobody is looking with the screen off, so the game waits for the next tap
         boolean pause = !powerManager.isInteractive();
 
-        PlinkoImageStore.loadChunk(context, appWidgetId, start, pause, () -> isActive(appWidgetId, run), chunk -> {
+        // when the phone is busy this chunk is asked for too late. then it starts further on, at the frame
+        // that should be on screen when it is drawn, so the game catches up and never plays behind
+        long behind = SystemClock.elapsedRealtime() + APPLY_MILLIS - due;
+        int jump = behind > 0 ? (int) Math.min(MAX_JUMP_FRAMES, behind / FLIP + CATCH_UP_FRAMES) : 0;
+        int chunkStart = start + jump;
+        long chunkDue = due + jump * FLIP;
+        // chunks that are behind are asked for earlier next time, chunks with time left later
+        swapLead = Math.max(20L, Math.min(600L, swapLead + behind / 2));
+
+        PlinkoImageStore.loadChunk(context, appWidgetId, chunkStart, index, pause, () -> isActive(appWidgetId, run), chunk -> {
             Run current = RUNS.get(appWidgetId);
             if (chunk == null || current == null || current.id != run) {
                 result.finish();
@@ -173,23 +190,29 @@ public class WidgetProviderPlinko extends AppWidgetProvider {
                 result.finish();
                 return;
             }
-            RemoteViews views = WidgetHelperPlinko.makeAnimatedView(context, appWidgetId, chunk.frames);
-            // late chunks are asked for earlier next time, early chunks later
-            long late = SystemClock.elapsedRealtime() + APPLY_MILLIS - due;
-            swapLead = Math.max(20L, Math.min(400L, swapLead + late / 2));
-            show(context, manager, appWidgetId, run, chunk, views, result);
+            long late = SystemClock.elapsedRealtime() + APPLY_MILLIS - chunkDue;
+            // a late chunk starts where the old one is by now, otherwise the game would jump back
+            int skip = skippedFrames(late, chunk);
+            RemoteViews views = WidgetHelperPlinko.makeAnimatedView(context, appWidgetId, chunk.frames, skip);
+            show(context, manager, appWidgetId, run, chunk, skip, views, result);
         });
     }
 
+    // how many frames of the chunk are already over when it is this late
+    private static int skippedFrames(long lateMillis, PlinkoImageStore.Chunk chunk) {
+        return (int) Math.max(0L, Math.min(chunk.length - 1, lateMillis / FLIP));
+    }
+
     private static void show(Context context, AppWidgetManager manager, int appWidgetId, int run,
-                             PlinkoImageStore.Chunk chunk, RemoteViews views, PendingResult result) {
+                             PlinkoImageStore.Chunk chunk, int skip, RemoteViews views, PendingResult result) {
         Run current = RUNS.get(appWidgetId);
         if (current == null || current.id != run) {
             result.finish();
             return;
         }
         manager.updateAppWidget(appWidgetId, views);
-        long shownAt = SystemClock.elapsedRealtime();
+        // the moment the first frame of the chunk would have been shown
+        long shownAt = SystemClock.elapsedRealtime() - skip * FLIP;
         RUNS.replace(appWidgetId, current, new Run(run, chunk.start, shownAt, chunk.frames.size()));
 
         // android gives the app one broadcast at a time, so a tap would wait for as long as this one is held.
@@ -205,9 +228,10 @@ public class WidgetProviderPlinko extends AppWidgetProvider {
                         .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
                         .putExtra(EXTRA_RUN, run)
                         .putExtra(EXTRA_START, chunk.start + chunk.length)
+                        .putExtra(EXTRA_INDEX, chunk.index + 1)
                         .putExtra(EXTRA_DUE, shownAt + playMillis));
             }
-        }, Math.max(0L, playMillis - swapLead));
+        }, Math.max(0L, playMillis - skip * FLIP - swapLead));
     }
 
     private static boolean isActive(int appWidgetId, int run) {

@@ -14,8 +14,10 @@ import java.util.List;
 
 // reads settings synchronously, so only call this from the PlinkoImageStore thread
 final class WidgetHelperPlinko {
-    // the last frame is repeated, so the flipper doesn't loop back while the next update is on its way
-    private static final int HOLD_FRAMES = 4;
+    // after the frames come empty views, through which the last frame shows. the flipper starts again
+    // at the first frame when it reaches its end, and that looks like a jump back in time.
+    // with these the game stands still for up to 3 seconds when the next update is late
+    private static final int HOLD_VIEWS = 75;
 
     private WidgetHelperPlinko() {
     }
@@ -32,18 +34,23 @@ final class WidgetHelperPlinko {
         return views;
     }
 
-    static RemoteViews makeAnimatedView(Context context, int appWidgetId, List<String> frames) {
+    // firstFrame is where the animation starts: a chunk that arrives late skips what is already over
+    static RemoteViews makeAnimatedView(Context context, int appWidgetId, List<String> frames, int firstFrame) {
         RemoteViews views = makeBaseView(context, appWidgetId);
         views.setViewVisibility(R.id.widget_plinko_flipper, View.VISIBLE);
-        views.setViewVisibility(R.id.widget_plinko_image, View.GONE);
+        // behind the flipper, for when it shows an empty view
+        views.setViewVisibility(R.id.widget_plinko_image, View.VISIBLE);
+        views.setImageViewUri(R.id.widget_plinko_image,
+                GeneratedImageProvider.uriFor(context, frames.get(frames.size() - 1)));
         views.setViewVisibility(R.id.widget_plinko_empty, View.GONE);
         for (String frame : frames) {
             views.addView(R.id.widget_plinko_flipper, makeFrameView(context, frame));
         }
-        for (int i = 0; i < HOLD_FRAMES; i++) {
-            views.addView(R.id.widget_plinko_flipper, makeFrameView(context, frames.get(frames.size() - 1)));
+        for (int i = 0; i < HOLD_VIEWS; i++) {
+            views.addView(R.id.widget_plinko_flipper,
+                    new RemoteViews(context.getPackageName(), R.layout.plinko_flipper_hold));
         }
-        views.setDisplayedChild(R.id.widget_plinko_flipper, 0);
+        views.setDisplayedChild(R.id.widget_plinko_flipper, firstFrame);
         return views;
     }
 

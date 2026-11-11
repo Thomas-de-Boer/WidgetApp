@@ -28,14 +28,9 @@ import java.util.function.BooleanSupplier;
 // keeps the game of every plinko widget and draws its frames.
 // all work runs on one thread, so the games are only touched there
 final class PlinkoImageStore {
-    // the first part after a tap is short, so the new ball shows up quickly
-    static final int FIRST_CHUNK_FRAMES = 10;
-    static final int CHUNK_FRAMES = 30;
-    // extra frames after a chunk, shown when the next chunk arrives a little late
-    static final int OVERLAP_FRAMES = 8;
     // a ball that is dropped while others fall starts this many frames later, which is the time drawing takes
     static final int LEAD_FRAMES = 6;
-    private static final int KEEP_FRAMES = 2 * (CHUNK_FRAMES + OVERLAP_FRAMES);
+    private static final int KEEP_FRAMES = 120;
     private static final String DIRECTORY = "plinko_widget";
     private static final String TAG = "PlinkoImageStore";
     private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor();
@@ -43,8 +38,23 @@ final class PlinkoImageStore {
     // taps per widget that wait for this thread. drawing ahead stops for them, so a new ball never waits
     // for frames that the tap is going to replace anyway
     private static final Map<Integer, AtomicInteger> WAITING_TAPS = new ConcurrentHashMap<>();
+    // chunks that wait for this thread. drawing ahead stops for them too: with several widgets a chunk
+    // that is needed now goes before a chunk that is needed later
+    private static final AtomicInteger WAITING_CHUNKS = new AtomicInteger();
 
     private PlinkoImageStore() {
+    }
+
+    // how many frames a chunk plays. the first chunk after a tap is short, so the new ball shows up quickly.
+    // the chunks grow step by step: every chunk has to be drawn while the one before it plays
+    static int chunkFrames(int index) {
+        return index == 0 ? 10 : index == 1 ? 15 : 30;
+    }
+
+    // extra frames after a chunk, shown when the next chunk arrives late.
+    // without them the launcher starts the chunk again, which looks like a jump back in time
+    static int overlapFrames(int index) {
+        return index == 0 ? 8 : index == 1 ? 12 : 20;
     }
 
     private static final class Game {
@@ -61,6 +71,8 @@ final class PlinkoImageStore {
 
     static final class Chunk {
         final int start;
+        // 0 for the first chunk after a tap
+        final int index;
         // the frames to play before the next chunk, the frames after those are the overlap
         final int length;
         final List<String> frames;
@@ -69,8 +81,9 @@ final class PlinkoImageStore {
         // true when there is nothing left to play
         final boolean finished;
 
-        Chunk(int start, int length, List<String> frames, String still, boolean finished) {
+        Chunk(int start, int index, int length, List<String> frames, String still, boolean finished) {
             this.start = start;
+            this.index = index;
             this.length = length;
             this.frames = frames;
             this.still = still;
@@ -116,20 +129,23 @@ final class PlinkoImageStore {
             saveProgress(context, appWidgetId, game);
 
             long startTime = SystemClock.elapsedRealtime();
-            List<String> frames = renderFrames(context, appWidgetId, game, start, FIRST_CHUNK_FRAMES + OVERLAP_FRAMES, false);
+            List<String> frames = renderFrames(context, appWidgetId, game, start, chunkFrames(0) + overlapFrames(0), false);
             Log.d(TAG, "Drew " + frames.size() + " frames in " + (SystemClock.elapsedRealtime() - startTime) + " ms");
-            callback.onResult(new Chunk(start, FIRST_CHUNK_FRAMES, frames, first(frames), frames.isEmpty()));
+            callback.onResult(new Chunk(start, 0, chunkFrames(0), frames, first(frames), frames.isEmpty()));
             // ready before it is needed: drawing is faster than playing
-            renderFrames(context, appWidgetId, game, start + FIRST_CHUNK_FRAMES, CHUNK_FRAMES + OVERLAP_FRAMES, true);
+            renderFrames(context, appWidgetId, game, start + chunkFrames(0), chunkFrames(1) + overlapFrames(1), true);
         });
     }
 
     // the chunk that starts at this frame. with pause, or when nothing moves, the chunk is only a still image.
     // active is asked right before the work: a tap can have replaced this animation in the meantime,
     // and then the callback gets null
-    static void loadChunk(Context context, int appWidgetId, int start, boolean pause, BooleanSupplier active,
+    static void loadChunk(Context context, int appWidgetId, int start, int index, boolean pause,
+                          BooleanSupplier active,
                           SettingsManager.Callback<Chunk> callback) {
+        WAITING_CHUNKS.incrementAndGet();
         EXECUTOR.execute(() -> {
+            WAITING_CHUNKS.decrementAndGet();
             Game game = game(appWidgetId);
             if (!active.getAsBoolean() || start < game.board.frame()) {
                 callback.onResult(null);
@@ -141,12 +157,15 @@ final class PlinkoImageStore {
 
             if (pause || game.board.isIdle()) {
                 List<String> still = renderFrames(context, appWidgetId, game, start, 1, false);
-                callback.onResult(new Chunk(start, 0, new ArrayList<>(), first(still), true));
+                callback.onResult(new Chunk(start, index, 0, new ArrayList<>(), first(still), true));
+                // the game stands still now, so only the image that is on the widget is still needed
+                deleteAllExcept(context, appWidgetId, first(still));
                 return;
             }
-            List<String> frames = renderFrames(context, appWidgetId, game, start, CHUNK_FRAMES + OVERLAP_FRAMES, false);
-            callback.onResult(new Chunk(start, CHUNK_FRAMES, frames, first(frames), frames.isEmpty()));
-            renderFrames(context, appWidgetId, game, start + CHUNK_FRAMES, CHUNK_FRAMES + OVERLAP_FRAMES, true);
+            List<String> frames = renderFrames(context, appWidgetId, game, start, chunkFrames(index) + overlapFrames(index), false);
+            callback.onResult(new Chunk(start, index, chunkFrames(index), frames, first(frames), frames.isEmpty()));
+            renderFrames(context, appWidgetId, game, start + chunkFrames(index),
+                    chunkFrames(index + 1) + overlapFrames(index + 1), true);
         });
     }
 
@@ -195,6 +214,9 @@ final class PlinkoImageStore {
     }
 
     private static boolean tapWaiting() {
+        if (WAITING_CHUNKS.get() > 0) {
+            return true;
+        }
         for (AtomicInteger taps : WAITING_TAPS.values()) {
             if (taps.get() > 0) {
                 return true;
@@ -321,6 +343,17 @@ final class PlinkoImageStore {
     private static void deleteFrames(Context context, String set, int beforeFrame) {
         File[] files = directory(context).listFiles((dir, name) ->
                 name.startsWith(set + "_") && name.endsWith(".png") && frameNumber(name) < beforeFrame);
+        if (files != null) {
+            for (File file : files) {
+                file.delete();
+            }
+        }
+    }
+
+    // deletes every frame of this widget except one. keep can be null
+    private static void deleteAllExcept(Context context, int appWidgetId, String keep) {
+        File[] files = directory(context).listFiles((dir, name) ->
+                name.startsWith(prefix(appWidgetId)) && !name.equals(keep));
         if (files != null) {
             for (File file : files) {
                 file.delete();
