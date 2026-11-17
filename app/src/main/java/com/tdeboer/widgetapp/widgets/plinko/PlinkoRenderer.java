@@ -23,6 +23,7 @@ final class PlinkoRenderer {
     private static final float BALL_RADIUS = 9f;
     private static final float SLOT_GAP = 3f;
     private static final int FLASH_FRAMES = 6;
+    private static final int BONUS_FLASH_FRAMES = 16;
     private static final float MARGIN = 16f;
     private static final float BAR_WIDTH = 150f;
 
@@ -101,6 +102,8 @@ final class PlinkoRenderer {
             }
         }
 
+        drawBonusPins(canvas, board);
+
         for (PlinkoBoard.Ball ball : board.balls()) {
             board.position(ball, position);
             // spent balls are pale: they give points but no new balls
@@ -120,6 +123,39 @@ final class PlinkoRenderer {
         }
     }
 
+    // a glowing pin has a soft halo in the ball color. when a ball takes it, it bursts out and fades
+    // back to a normal pin, and a "+1" floats up
+    private void drawBonusPins(Canvas canvas, PlinkoBoard board) {
+        for (int pin = 0; pin < PlinkoBoard.BONUS_PINS; pin++) {
+            float x = pixelX(board.bonusIndex(pin) - board.bonusRow(pin) / 2f);
+            float y = pixelY(board.bonusRow(pin));
+            if (!board.bonusTaken(pin)) {
+                shapePaint.setColor(colors[2]);
+                shapePaint.setAlpha(70);
+                canvas.drawCircle(x, y, PIN_RADIUS * 2.6f, shapePaint);
+                shapePaint.setAlpha(255);
+                canvas.drawCircle(x, y, PIN_RADIUS * 1.5f, shapePaint);
+                continue;
+            }
+            int since = board.framesSinceBonus(pin);
+            if (since < 0 || since >= BONUS_FLASH_FRAMES) {
+                continue;
+            }
+            float progress = since / (float) BONUS_FLASH_FRAMES;
+            shapePaint.setColor(colors[2]);
+            shapePaint.setAlpha(Math.round(200 * (1f - progress)));
+            canvas.drawCircle(x, y, PIN_RADIUS * (1.5f + 3f * progress), shapePaint);
+            shapePaint.setAlpha(255);
+
+            textPaint.setColor(colors[2]);
+            textPaint.setAlpha(Math.round(255 * (1f - progress * progress)));
+            textPaint.setTextSize(22f);
+            textPaint.setTextAlign(Paint.Align.CENTER);
+            canvas.drawText("+1", x, y - 14f - 30f * progress, textPaint);
+            textPaint.setAlpha(255);
+        }
+    }
+
     void recycle() {
         base.recycle();
     }
@@ -134,10 +170,18 @@ final class PlinkoRenderer {
 
         // the balls that are left to drop, next to the level
         float dotsX = MARGIN + textPaint.measureText(String.valueOf(board.level())) + 18f;
-        for (int ball = 0; ball < PlinkoBoard.BALLS_PER_LEVEL; ball++) {
+        // a bonus ball beyond the usual five gets a ring around it
+        int dots = Math.max(PlinkoBoard.BALLS_PER_LEVEL, board.ballsLeft());
+        for (int ball = 0; ball < dots; ball++) {
             boolean left = ball < board.ballsLeft();
             shapePaint.setColor(left ? colors[2] : blend(colors[0], colors[1], 0.45f));
             canvas.drawCircle(dotsX + ball * 17f, 31f, 6f, shapePaint);
+            if (ball >= PlinkoBoard.BALLS_PER_LEVEL) {
+                shapePaint.setStyle(Paint.Style.STROKE);
+                shapePaint.setStrokeWidth(2f);
+                canvas.drawCircle(dotsX + ball * 17f, 31f, 8.5f, shapePaint);
+                shapePaint.setStyle(Paint.Style.FILL);
+            }
         }
 
         float progress = Math.min(1f, board.score() / (float) board.target());
