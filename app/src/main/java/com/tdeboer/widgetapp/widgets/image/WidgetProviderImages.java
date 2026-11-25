@@ -24,11 +24,9 @@ public class WidgetProviderImages extends AppWidgetProvider {
     public static void update(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
         for (int appWidgetId : appWidgetIds) {
 
+//            first the view, so the widget has a list that can be told its images changed
+            appWidgetManager.updateAppWidget(appWidgetId, WidgetHelperImages.makeView(context, appWidgetId));
             appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.widget_images_flipper);
-
-            WidgetHelperImages.makeView(context, appWidgetId, view -> {
-                appWidgetManager.updateAppWidget(appWidgetId, view);
-            });
         }
     }
 

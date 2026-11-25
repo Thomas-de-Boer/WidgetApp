@@ -5,7 +5,6 @@ import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.widget.RemoteViews;
 
@@ -25,8 +24,6 @@ public class WidgetHelperImages {
 
     public static final String FILE_PREFIX = "UploadedImages";
     private static final Gson GSON = new Gson();
-
-    public static List<Bitmap> images;
 
 //    only call this after the list of uploaded images is cleared, the settings screen expects every listed file to exist
     public static void deleteAll(Context context) {
@@ -95,43 +92,22 @@ public class WidgetHelperImages {
         });
     }
 
-    public static void makeView(Context context, int appWidgetId, WidgetProviderImages.Callback<RemoteViews> callback) {
-        SettingsManager.read(SettingsManager.UPLOADEDIMAGES, null, string -> {
+//    builds the view right away, without waiting for the settings: the list of images is read by ImageWidgetFactory.
+//    after an app update android forgets the view of every widget and asks for a new one with an update broadcast.
+//    a view built later on another thread could be lost when android stops the app right after that broadcast,
+//    and the widget then stayed invisible
+    public static RemoteViews makeView(Context context, int appWidgetId) {
+        Intent intent = new Intent(context, MainActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE);
 
-//            List<String> uploadedFileNames = SettingsManager.deserializeString(string);
-
-//            images = new ArrayList<>();
-//
-//            assert uploadedFileNames != null;
-//
-//            for (String uploadedFileName : uploadedFileNames) {
-//
-//
-//                FileInputStream fileInputStream;
-//                try {
-//                    fileInputStream = context.openFileInput(uploadedFileName);
-//                } catch (FileNotFoundException e) {
-//                    throw new RuntimeException(e);
-//                }
-//
-//                Bitmap bitmap = BitmapFactory.decodeStream(fileInputStream);
-//
-//                images.add(bitmap);
-//            }
-
-            Intent intent = new Intent(context, MainActivity.class);
-            PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_MUTABLE);
-
-            RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_images);
-            views.setOnClickPendingIntent(R.id.widget_images, pendingIntent);
-            Intent factoryIntent = new Intent(context, ImageWidgetService.class);
-            factoryIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
-//            the data contains the extra, so android keeps a separate list for every widget
-            factoryIntent.setData(Uri.parse(factoryIntent.toUri(Intent.URI_INTENT_SCHEME)));
-            views.setRemoteAdapter(R.id.widget_images_flipper, factoryIntent);
-            views.setEmptyView(R.id.widget_images_flipper, R.id.widget_images_empty);
-
-            callback.onResult(views);
-        });
+        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_images);
+        views.setOnClickPendingIntent(R.id.widget_images, pendingIntent);
+        Intent factoryIntent = new Intent(context, ImageWidgetService.class);
+        factoryIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+//        the data contains the extra, so android keeps a separate list for every widget
+        factoryIntent.setData(Uri.parse(factoryIntent.toUri(Intent.URI_INTENT_SCHEME)));
+        views.setRemoteAdapter(R.id.widget_images_flipper, factoryIntent);
+        views.setEmptyView(R.id.widget_images_flipper, R.id.widget_images_empty);
+        return views;
     }
 }

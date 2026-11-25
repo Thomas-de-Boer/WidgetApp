@@ -20,6 +20,7 @@ import com.tdeboer.widgetapp.update.UpdateChecker;
 import com.tdeboer.widgetapp.update.UpdateManager;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 
 import java.util.HashMap;
@@ -56,7 +57,7 @@ public class MainActivity extends AppCompatActivity implements WidgetSettingsLis
         updateProgress = findViewById(R.id.updateProgress);
         updateButton = findViewById(R.id.updateButton);
         updateDismiss = findViewById(R.id.updateDismiss);
-        updateButton.setOnClickListener(v -> UpdateManager.startUpdate(this));
+        updateButton.setOnClickListener(v -> confirmUpdate());
         updateDismiss.setOnClickListener(v -> UpdateManager.dismiss());
         UpdateManager.checkOnce(this);
 
@@ -93,6 +94,20 @@ public class MainActivity extends AppCompatActivity implements WidgetSettingsLis
     protected void onPause() {
         UpdateManager.detach();
         super.onPause();
+    }
+
+//    asks before the first try, a retry after a failed update goes straight on
+    private void confirmUpdate() {
+        if (UpdateManager.getState() != UpdateManager.State.AVAILABLE) {
+            UpdateManager.startUpdate(this);
+            return;
+        }
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.update_confirm_title)
+                .setMessage(R.string.update_confirm_message)
+                .setPositiveButton(R.string.update_button, (dialog, which) -> UpdateManager.startUpdate(this))
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
     }
 
     private void showUpdateState() {
