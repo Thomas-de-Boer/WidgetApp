@@ -10,7 +10,7 @@ import java.util.List;
 // a ball bounces down 8 rows of pins and lands in one of 9 slots. the middle slot removes the ball,
 // the other slots turn it into that many new balls, which drop from the top again.
 // every level gives a few balls to drop, a number of points to reach, and a glowing pin that
-// gives one more ball to drop when a dropped ball bounces off it.
+// gives one more ball to drop when a ball bounces off it.
 // the same seed and the same drops always give the same game, so a part can be played again exactly
 public final class PlinkoBoard {
     public static final int ROWS = 8;
@@ -22,8 +22,7 @@ public final class PlinkoBoard {
     // how much more often a ball bounces towards the middle than away from it.
     // with this a ball makes 0.989 new balls on average: just under one, so every chain ends, but chains get long
     static final float LEAN = 0.027f;
-    // every level a pin glows. a dropped ball that bounces off it gives an extra ball to drop.
-    // one pin is taken in about 2 of 3 levels
+    // every level a pin glows. the first ball that bounces off it gives an extra ball to drop
     static final int BONUS_PINS = 1;
     // the first rows are touched by almost every ball, so their pins never glow
     static final int BONUS_MIN_ROW = 3;
@@ -38,8 +37,6 @@ public final class PlinkoBoard {
     static final int START_LIVES = 3;
     // added to a chain number to mark a spent ball, so it has to be above every chain number
     private static final int SPENT = 16;
-    // added to mark a ball the player dropped
-    private static final int DROPPED = 32;
 
     // how long each part of the fall takes, in frames
     static final int DROP_FRAMES = 8;
@@ -69,16 +66,13 @@ public final class PlinkoBoard {
         final int chain;
         // a spent ball still gives points, but makes no new balls
         final boolean spent;
-        // dropped by the player, not made by a slot: only these can take a glowing pin
-        final boolean dropped;
 
-        Ball(int start, int path, float jitter, int chain, boolean spent, boolean dropped) {
+        Ball(int start, int path, float jitter, int chain, boolean spent) {
             this.start = start;
             this.path = path;
             this.jitter = jitter;
             this.chain = chain;
             this.spent = spent;
-            this.dropped = dropped;
         }
 
         int slot() {
@@ -102,8 +96,7 @@ public final class PlinkoBoard {
     private long random;
     private int frame;
     private final List<Ball> balls;
-    // the chains of the balls that wait at the top, with SPENT added for a spent ball and DROPPED for a ball
-    // the player dropped
+    // the chains of the balls that wait at the top, with SPENT added for a spent ball
     private final ArrayDeque<Integer> waiting;
     private final List<Popup> popups;
     private int lastRelease;
@@ -307,14 +300,14 @@ public final class PlinkoBoard {
         if (phase != PLAYING || ballsLeft == 0) {
             return false;
         }
-        waiting.add(takeBall() + (finishing ? SPENT : 0) + DROPPED);
+        waiting.add(takeBall() + (finishing ? SPENT : 0));
         release();
         return true;
     }
 
     // only for tests: drops a ball with a known path
     void dropWithPath(int path) {
-        balls.add(new Ball(frame, path, 0f, takeBall(), finishing, true));
+        balls.add(new Ball(frame, path, 0f, takeBall(), finishing));
     }
 
     // the chain that the next dropped ball starts
@@ -379,12 +372,12 @@ public final class PlinkoBoard {
         }
     }
 
-    // a ball rests on a pin at the start of every hop. a glowing pin that a dropped ball touches gives one
-    // more ball to drop. balls made by the slots would hit every pin in a long chain, so they can't take it.
-    // after the points are reached the level is over, so then there is nothing to win
+    // a ball rests on a pin at the start of every hop. a glowing pin that any ball touches gives one more
+    // ball to drop: also a ball made by a slot, and also after the points are reached, when the extra ball
+    // is not needed. a pin that keeps glowing under a ball looks broken
     private void checkBonusPin(Ball ball) {
         int time = frame - ball.start - DROP_FRAMES;
-        if (!ball.dropped || ball.spent || finishing || time < 0 || time % ROW_FRAMES != 0) {
+        if (time < 0 || time % ROW_FRAMES != 0) {
             return;
         }
         int row = time / ROW_FRAMES;
@@ -452,7 +445,7 @@ public final class PlinkoBoard {
         if (!waiting.isEmpty() && balls.size() < MAX_ON_SCREEN && frame - lastRelease >= RELEASE_GAP) {
             float jitter = (nextFloat() * 2f - 1f) * DROP_SPREAD;
             int next = waiting.remove();
-            balls.add(new Ball(frame, nextPath(), jitter, next % SPENT, (next & SPENT) != 0, (next & DROPPED) != 0));
+            balls.add(new Ball(frame, nextPath(), jitter, next % SPENT, (next & SPENT) != 0));
             lastRelease = frame;
         }
     }

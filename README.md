@@ -17,7 +17,7 @@ An Android app with five home screen widgets: quotes, your own photos, generated
 - **Dropping balls:** tap anywhere on the widget to drop a ball. Every level gives you 5 balls and a number of points to reach.
 - **Slots:** the slots give `+4 +3 +2 +1 −1 +1 +2 +3 +4`. The middle slot (−1) removes the ball. The other slots give that many points, and the ball turns into that many new balls, which drop from the top again.
 - **Chains:** all balls that come from one of your drops are a chain. A long chain multiplies the points: ×2 from 15 balls, then ×3, ×5 and ×10.
-- **Bonus pin:** every level, one pin glows. When a ball you dropped bounces off it, you get an extra ball to drop.
+- **Bonus pin:** every level, one pin glows. When a ball bounces off it, you get an extra ball to drop.
 - **Lives:** you have 3. A failed level costs one, and when they're gone you start again at level 1. The star shows the highest level you ever reached.
 - **Settings:** you can choose the colors, turn **Quick finish** on or off, and reset your progress.
 

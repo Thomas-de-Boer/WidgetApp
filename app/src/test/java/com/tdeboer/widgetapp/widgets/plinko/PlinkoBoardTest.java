@@ -373,6 +373,57 @@ public class PlinkoBoardTest {
         assertEquals(PlinkoBoard.BALLS_PER_LEVEL - 1, board.ballsLeft());
     }
 
+    // with a quick finish the points can be reached while a dropped ball is still on its way down.
+    // that ball still takes a glowing pin lower on the board
+    @Test
+    public void aGlowingPinIsTakenAfterThePointsAreReached() {
+        PlinkoBoard board = plainBoard(1, 1, 3);
+        board.setQuickFinish(true);
+        // the far right path touches the last pin of every row
+        board.setBonusPin(0, PlinkoBoard.ROWS - 1, PlinkoBoard.ROWS - 1);
+        // three balls in the far left slot give 12 points, more than the 10 of level 1
+        for (int i = 0; i < 3; i++) {
+            board.dropWithPath(pathWithRights(0));
+        }
+        board.advanceTo(20);
+        board.dropWithPath(pathWithRights(PlinkoBoard.ROWS));
+        board.advanceTo(PlinkoBoard.TRAVEL_FRAMES);
+        assertTrue(board.score() >= board.target());
+        assertFalse(board.bonusTaken(0));
+
+        board.advanceTo(20 + PlinkoBoard.DROP_FRAMES + (PlinkoBoard.ROWS - 1) * PlinkoBoard.ROW_FRAMES);
+        assertTrue(board.bonusTaken(0));
+    }
+
+    // whole games with taps at random moments: whenever any ball is drawn resting on a glowing pin,
+    // a ball made by a slot too, that pin is taken right then
+    @Test
+    public void everyBallOnAGlowingPinTakesIt() {
+        float[] at = new float[2];
+        for (int game = 0; game < 300; game++) {
+            PlinkoBoard board = new PlinkoBoard(game * 7919L + 3, 1 + game % 10, 3);
+            board.setQuickFinish(game % 2 == 0);
+            java.util.Random taps = new java.util.Random(game);
+            for (int frame = 0; frame < 20_000; frame++) {
+                if (taps.nextInt(12) == 0) {
+                    board.drop();
+                }
+                board.step();
+                for (PlinkoBoard.Ball ball : board.balls()) {
+                    board.position(ball, at);
+                    for (int pin = 0; pin < PlinkoBoard.BONUS_PINS; pin++) {
+                        int row = board.bonusRow(pin);
+                        boolean onPin = Math.abs(at[0] - (board.bonusIndex(pin) - row / 2f)) < 1e-4f
+                                && Math.abs(at[1] - (row - PlinkoBoard.REST_ABOVE_PIN)) < 1e-4f;
+                        if (onPin) {
+                            assertTrue("game " + game + " frame " + board.frame(), board.bonusTaken(pin));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     @Test
     public void aBallThatMissesTheGlowingPinGivesNothing() {
         PlinkoBoard board = plainBoard(1, 1, 3);
