@@ -182,156 +182,137 @@ h2 {
 /* ----------------------------------------------------------------- hero */
 
 .hero {
-  padding-top: 80px;
+  padding-top: 72px;
   padding-bottom: 88px;
   display: flex;
   flex-wrap: wrap;
-  gap: 56px 64px;
+  gap: 48px 64px;
   align-items: center;
 }
-.hero-main { flex: 1 1 440px; min-width: 0; max-width: 580px; display: flex; flex-direction: column; gap: 24px; }
+.hero-main { flex: 1 1 400px; min-width: 0; max-width: 520px; display: flex; flex-direction: column; gap: 22px; }
 .hero .lead { color: var(--ink); }
-.hero .actions { margin-top: 4px; }
-.release-info { min-height: 20px; }
+#release-info { min-height: 20px; }
 
-/* The home screen: a phone wallpaper (the icon's indigo) with the five
-   widgets on a 4-column launcher grid. */
-.home {
-  flex: 0 1 400px;
+.hero-widget {
+  flex: 1 1 420px;
+  max-width: 560px;
   min-width: 0;
-  margin: 0 auto;
+  margin: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  container-type: inline-size;
 }
-/* Launcher cells are square: rows are as tall as a column is wide. */
-.screen {
-  --pad: 14px;
-  --gap: 12px;
-  --frame: 6px;
-  padding: 18px var(--pad);
-  border-radius: 28px;
-  border: var(--frame) solid #0c0c0c;
-  background: linear-gradient(160deg, #3F43A8, #23255F 70%);
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-auto-rows: calc((100cqw - 2 * var(--pad) - 2 * var(--frame) - 3 * var(--gap)) / 4);
-  gap: var(--gap);
-}
+
+/* -------------------------------------------------------------- widgets */
+/* A widget looks like it does on a phone: a rounded tile in the widget's
+   own colours, whatever the page theme. Sizes follow the launcher grid,
+   so a 3×3 maze really is bigger than a 2×2 image. */
+
 .widget {
+  --cell: min(84px, (100vw - 32px - 24px) / 4);
   position: relative;
+  display: block;
   overflow: hidden;
-  border-radius: 16px;
+  width: calc(var(--w) * var(--cell) + (var(--w) - 1) * 8px);
+  height: calc(var(--h) * var(--cell) + (var(--h) - 1) * 8px);
+  border-radius: 22px;
   background: var(--w-bg);
   color: var(--w-ink);
 }
-.widget canvas, .widget svg { display: block; width: 100%; height: 100%; }
+.t-light .widget { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18); }
+.widget canvas, .widget img { display: block; width: 100%; height: 100%; }
+.widget img { object-fit: cover; }
+button.widget { padding: 0; border: none; font: inherit; cursor: pointer; }
+
+.w-plinko { width: 100%; height: auto; aspect-ratio: 4 / 3; padding: 8px; }
 
 .w-quote {
-  grid-column: span 4;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 12px;
-  background: linear-gradient(115deg, #2b1433, #5a2a54 55%, #b0556e);
+  background: url("quote-background.png") center / cover;
 }
 .w-quote p {
-  padding: 6px 12px;
+  max-width: 330px;
+  padding: 10px 14px;
   background: rgba(0, 0, 0, 0.19); /* black_opacity50 in colors.xml */
   color: #fff;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.35;
   text-align: center;
 }
-.w-maze { grid-column: span 3; grid-row: span 3; }
-.w-gen { grid-row: span 2; }
-.w-plinko { grid-column: span 4; grid-row: span 3; }
 
-button.widget { padding: 0; border: none; font: inherit; cursor: pointer; }
-.home-hint { text-align: center; }
+/* The maze image is fitCenter in the space above the buttons, as in widget_maze.xml. */
+.w-maze { display: grid; grid-template-rows: minmax(0, 1fr) auto; padding: 8px 8px 0; }
+.w-maze canvas { height: 100%; width: auto; max-width: 100%; aspect-ratio: 1; justify-self: center; }
+.maze-buttons { display: flex; }
+.maze-buttons button {
+  flex: 1 1 0;
+  min-height: 40px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--w-ink);
+  font: 500 14px/20px var(--font-body);
+  cursor: pointer;
+}
+.maze-buttons button:hover { background: rgba(255, 255, 255, 0.06); }
 
-/* --------------------------------------------------------------- widgets */
+/* ------------------------------------------------------------- showcase */
 
 .section { padding-top: 80px; padding-bottom: 80px; border-top: 1px solid var(--line); }
-.section-head { display: flex; flex-direction: column; gap: 12px; max-width: 680px; margin-bottom: 32px; }
+.section > h2 { margin-bottom: 40px; }
 
-/* Plain list with a thin rule between entries, like the CV's work list:
-   the widget on the left, what it does on the right. */
-.entries { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line-strong); max-width: 860px; }
-.entry {
+.showcase { display: flex; flex-direction: column; }
+.item {
   display: grid;
-  grid-template-columns: 220px 1fr;
-  gap: 24px;
-  padding: 20px 0;
-  border-bottom: 1px solid var(--line);
+  grid-template-columns: 360px minmax(0, 1fr);
+  gap: 20px 48px;
+  align-items: start;
+  padding: 32px 0;
+  border-top: 1px solid var(--line);
 }
-.entry-name { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
-.entry-text { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-.entry-text p { max-width: 62ch; }
+.item:first-child { border-top: none; padding-top: 0; }
+.item-text { display: flex; flex-direction: column; gap: 10px; max-width: 560px; }
+.item-text-wide { grid-column: 1 / -1; max-width: 680px; }
+.item-text .title { display: flex; align-items: center; gap: 10px; }
+.item-text p:not(.small) { color: var(--ink); }
 
-.rules { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 15px; line-height: 23px; color: var(--muted); max-width: 62ch; }
-.rules strong { color: var(--ink); font-weight: 600; }
-.slots { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rules { margin: 4px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; color: var(--muted); font-size: 16px; line-height: 24px; }
 
-details summary {
-  cursor: pointer;
-  min-height: 44px;
-  display: inline-flex;
-  align-items: center;
-  font-weight: 600;
-  color: var(--primary);
-}
-details[open] summary { margin-bottom: 8px; }
+/* -------------------------------------------------------------- install */
 
-/* --------------------------------------------------------------- install */
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 48px 80px; align-items: start; }
+.install, .changes { display: flex; flex-direction: column; gap: 16px; max-width: 560px; }
+.steps { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 10px; }
+.steps li::marker { font-weight: 700; color: var(--muted); }
 
-.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 48px 64px; }
-
-.steps { list-style: none; margin: 0; padding: 0; counter-reset: step; display: flex; flex-direction: column; }
-.steps li {
-  counter-increment: step;
-  display: grid;
-  grid-template-columns: 40px 1fr;
-  gap: 12px;
-  padding: 16px 0;
-  border-bottom: 1px solid var(--line);
-}
-.steps li:first-child { border-top: 1px solid var(--line-strong); }
-.steps li::before {
-  content: counter(step);
-  font: 700 22px/26px var(--font-display);
-  color: var(--primary);
-}
-
-.notes { display: flex; flex-direction: column; gap: 28px; }
-.note { display: flex; flex-direction: column; gap: 6px; }
-.note p { color: var(--muted); max-width: 62ch; }
+.changes h2 { font-size: clamp(24px, 5vw, 28px); }
+#changes-body h3 { font: 600 17px/24px var(--font-body); margin: 4px 0 0; }
+#changes-body ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; color: var(--muted); }
+#changes-body ul ul { margin-top: 6px; }
+#changes-body strong { color: var(--ink); font-weight: 600; }
+#changes-body > * + * { margin-top: 10px; }
 
 /* --------------------------------------------------------------- footer */
 
 .site-footer { border-top: 1px solid var(--line); }
-.footer-inner {
-  padding-top: 56px;
-  padding-bottom: 64px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 24px 32px;
-  align-items: flex-end;
-  justify-content: space-between;
-}
-.footer-text { display: flex; flex-direction: column; gap: 8px; }
+.footer-inner { padding-top: 32px; padding-bottom: 40px; }
 
 /* Tap feedback, in place of the default iOS highlight. */
-.btn:active, .theme-toggle:active, button.widget:active { opacity: 0.75; }
+.btn:active, .theme-toggle:active, button.widget:active, .maze-buttons button:active { opacity: 0.75; }
 .nav-links a:active, .brand:active { color: var(--ink); opacity: 0.75; }
+
+@media (max-width: 760px) {
+  .item { grid-template-columns: 1fr; }
+}
 
 @media (max-width: 640px) {
   .wrap { padding-left: 16px; padding-right: 16px; }
-  .hero { padding-top: 48px; padding-bottom: 56px; }
+  .hero { padding-top: 44px; padding-bottom: 56px; }
   .section { padding-top: 56px; padding-bottom: 56px; }
-  .entry { grid-template-columns: 1fr; gap: 8px; }
-  .screen { --pad: 10px; --gap: 9px; padding-top: 14px; padding-bottom: 14px; border-radius: 24px; }
+  .widget { border-radius: 18px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
