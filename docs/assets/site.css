@@ -1,0 +1,340 @@
+/* WidgetApp page. Same look as the CV site (tdeboer.com): one web font
+   (Archivo, for headings), system fonts for the rest, one blue accent.
+   The home screen in the hero uses the widgets' own default colours. */
+
+@font-face {
+  font-family: "Archivo";
+  font-style: normal;
+  font-weight: 600 700;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("fonts/archivo-latin.woff2") format("woff2");
+}
+
+:root {
+  --font-display: "Archivo", system-ui, sans-serif;
+  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* Widget theme 1 from MazeRenderer / PlinkoRenderer. */
+  --w-bg: #10141F;
+  --w-ink: #DCE3F2;
+  --w-pin: #8C96AD;
+  --w-path: #4FC3F7;
+  --w-ball: #FFC857;
+  --w-plus: #66BB6A;
+  --w-minus: #EF5350;
+}
+
+.t-dark {
+  color-scheme: dark;
+  --bg: #151515; --surface: #1d1d1d; --line: #2c2c2c; --line-strong: #5c5c5c;
+  --ink: #ececea; --muted: #a3a3a0;
+  --primary: #8aa8ff; --on-primary: #10131c; --psoft: #1c2235; --on-psoft: #b3c6ff;
+}
+.t-light {
+  color-scheme: light;
+  --bg: #faf9f6; --surface: #ffffff; --line: #e3e1dc; --line-strong: #8a8884;
+  --ink: #1b1b1b; --muted: #5a5955;
+  --primary: #2348c4; --on-primary: #ffffff; --psoft: #e8edfb; --on-psoft: #1d3aa0;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  accent-color: var(--primary);
+  -webkit-tap-highlight-color: transparent; /* replaced by the :active states below */
+}
+
+::selection { background: var(--primary); color: var(--on-primary); }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 17px/1.6 var(--font-body);
+  transition: background 0.2s, color 0.2s;
+}
+
+a { color: var(--primary); text-underline-offset: 3px; }
+a:hover { color: var(--ink); }
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+.skip-link {
+  position: absolute;
+  z-index: 10;
+  top: 8px;
+  left: 8px;
+  padding: 12px 16px;
+  border-radius: 6px;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+.skip-link:focus { transform: none; color: var(--on-primary); }
+main:focus { outline: none; }
+
+h1, h2, h3, p { margin: 0; }
+
+h1 {
+  font: 700 clamp(40px, 9vw, 64px)/1.05 var(--font-display);
+  letter-spacing: -0.025em;
+}
+h2 {
+  font: 700 clamp(28px, 6vw, 36px)/1.15 var(--font-display);
+  letter-spacing: -0.015em;
+}
+
+.wrap { max-width: 1120px; margin: 0 auto; padding-left: 24px; padding-right: 24px; }
+
+.label { font-size: 14px; line-height: 20px; color: var(--muted); }
+.lead { font-size: 19px; line-height: 1.55; color: var(--muted); }
+.small { font-size: 15px; line-height: 22px; color: var(--muted); }
+.title { font: 600 19px/26px var(--font-display); }
+
+.tag {
+  font: 500 13px/22px var(--font-body);
+  background: var(--psoft);
+  color: var(--on-psoft);
+  border-radius: 3px;
+  padding: 1px 7px;
+  white-space: nowrap;
+}
+
+.actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 0 18px;
+  border-radius: 6px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.btn svg { flex: none; }
+.btn-primary { background: var(--primary); color: var(--on-primary); }
+.btn-primary:hover { color: var(--on-primary); filter: brightness(1.1); }
+.btn-outline { border: 1px solid var(--line-strong); color: var(--ink); }
+.btn-outline:hover { border-color: var(--ink); color: var(--ink); }
+
+/* ------------------------------------------------------------------ nav */
+
+.site-header { border-bottom: 1px solid var(--line); }
+.nav {
+  padding-top: 14px;
+  padding-bottom: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font: 700 19px/28px var(--font-display);
+  color: var(--ink);
+  text-decoration: none;
+}
+.brand img { width: 28px; height: 28px; }
+.nav-right { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+.nav-links { display: flex; flex-wrap: wrap; gap: 2px; font-size: 15px; }
+.nav-links a { padding: 10px 10px; text-decoration: none; color: var(--muted); }
+.nav-links a:hover { color: var(--ink); }
+
+.theme-toggle {
+  min-height: 44px;
+  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.toggle-track {
+  position: relative;
+  display: block;
+  width: 42px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+}
+.toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--ink);
+  transition: transform 0.2s;
+}
+.t-dark .toggle-knob { transform: translateX(18px); }
+
+/* ----------------------------------------------------------------- hero */
+
+.hero {
+  padding-top: 80px;
+  padding-bottom: 88px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 56px 64px;
+  align-items: center;
+}
+.hero-main { flex: 1 1 440px; min-width: 0; max-width: 580px; display: flex; flex-direction: column; gap: 24px; }
+.hero .lead { color: var(--ink); }
+.hero .actions { margin-top: 4px; }
+.release-info { min-height: 20px; }
+
+/* The home screen: a phone wallpaper (the icon's indigo) with the five
+   widgets on a 4-column launcher grid. */
+.home {
+  flex: 0 1 400px;
+  min-width: 0;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  container-type: inline-size;
+}
+/* Launcher cells are square: rows are as tall as a column is wide. */
+.screen {
+  --pad: 14px;
+  --gap: 12px;
+  --frame: 6px;
+  padding: 18px var(--pad);
+  border-radius: 28px;
+  border: var(--frame) solid #0c0c0c;
+  background: linear-gradient(160deg, #3F43A8, #23255F 70%);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: calc((100cqw - 2 * var(--pad) - 2 * var(--frame) - 3 * var(--gap)) / 4);
+  gap: var(--gap);
+}
+.widget {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  background: var(--w-bg);
+  color: var(--w-ink);
+}
+.widget canvas, .widget svg { display: block; width: 100%; height: 100%; }
+
+.w-quote {
+  grid-column: span 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background: linear-gradient(115deg, #2b1433, #5a2a54 55%, #b0556e);
+}
+.w-quote p {
+  padding: 6px 12px;
+  background: rgba(0, 0, 0, 0.19); /* black_opacity50 in colors.xml */
+  color: #fff;
+  font-size: 14px;
+  line-height: 1.35;
+  text-align: center;
+}
+.w-maze { grid-column: span 3; grid-row: span 3; }
+.w-gen { grid-row: span 2; }
+.w-plinko { grid-column: span 4; grid-row: span 3; }
+
+button.widget { padding: 0; border: none; font: inherit; cursor: pointer; }
+.home-hint { text-align: center; }
+
+/* --------------------------------------------------------------- widgets */
+
+.section { padding-top: 80px; padding-bottom: 80px; border-top: 1px solid var(--line); }
+.section-head { display: flex; flex-direction: column; gap: 12px; max-width: 680px; margin-bottom: 32px; }
+
+/* Plain list with a thin rule between entries, like the CV's work list:
+   the widget on the left, what it does on the right. */
+.entries { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line-strong); max-width: 860px; }
+.entry {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 24px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--line);
+}
+.entry-name { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
+.entry-text { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.entry-text p { max-width: 62ch; }
+
+.rules { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 15px; line-height: 23px; color: var(--muted); max-width: 62ch; }
+.rules strong { color: var(--ink); font-weight: 600; }
+.slots { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+details summary {
+  cursor: pointer;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  font-weight: 600;
+  color: var(--primary);
+}
+details[open] summary { margin-bottom: 8px; }
+
+/* --------------------------------------------------------------- install */
+
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 48px 64px; }
+
+.steps { list-style: none; margin: 0; padding: 0; counter-reset: step; display: flex; flex-direction: column; }
+.steps li {
+  counter-increment: step;
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 12px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+.steps li:first-child { border-top: 1px solid var(--line-strong); }
+.steps li::before {
+  content: counter(step);
+  font: 700 22px/26px var(--font-display);
+  color: var(--primary);
+}
+
+.notes { display: flex; flex-direction: column; gap: 28px; }
+.note { display: flex; flex-direction: column; gap: 6px; }
+.note p { color: var(--muted); max-width: 62ch; }
+
+/* --------------------------------------------------------------- footer */
+
+.site-footer { border-top: 1px solid var(--line); }
+.footer-inner {
+  padding-top: 56px;
+  padding-bottom: 64px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px 32px;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+.footer-text { display: flex; flex-direction: column; gap: 8px; }
+
+/* Tap feedback, in place of the default iOS highlight. */
+.btn:active, .theme-toggle:active, button.widget:active { opacity: 0.75; }
+.nav-links a:active, .brand:active { color: var(--ink); opacity: 0.75; }
+
+@media (max-width: 640px) {
+  .wrap { padding-left: 16px; padding-right: 16px; }
+  .hero { padding-top: 48px; padding-bottom: 56px; }
+  .section { padding-top: 56px; padding-bottom: 56px; }
+  .entry { grid-template-columns: 1fr; gap: 8px; }
+  .screen { --pad: 10px; --gap: 9px; padding-top: 14px; padding-bottom: 14px; border-radius: 24px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  body, .toggle-knob { transition: none; }
+}

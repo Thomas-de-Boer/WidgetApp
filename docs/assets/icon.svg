@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="18 18 72 72">
+  <!-- The app icon (res/drawable/ic_launcher_*.xml), cropped to the part a launcher shows. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="108" y2="108" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3F43A8"/>
+      <stop offset="1" stop-color="#23255F"/>
+    </linearGradient>
+  </defs>
+  <rect x="18" y="18" width="72" height="72" rx="16" fill="url(#bg)"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M27,27H81V70M81,81H27V38M38,38H70V70H49M38,38V70M49,49H59V59" stroke="#FFFFFF" stroke-width="4"/>
+    <path d="M24,32.5H75.5V75.5H84" stroke="#FFC24B" stroke-width="4.5"/>
+  </g>
+</svg>
