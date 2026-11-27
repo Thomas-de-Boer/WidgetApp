@@ -165,6 +165,9 @@
 
     var best = Math.max(1, parseInt(recall("widgets-plinko-best"), 10) || 1);
     var level = 1, lives = START_LIVES, score = 0, ballsLeft, phase = "playing", bannerStart = 0;
+    // Quick finish, on as in the app: once the points are reached the level wraps up. The balls that
+    // fall at that moment still make new balls, and those new balls are spent.
+    var QUICK_FINISH = true, finishing = false;
     var frame = 0, balls = [], waiting = [], popups = [], hits = [], chainSizes = [], lastRelease = -99;
     var bonus;
 
@@ -184,6 +187,7 @@
     function newLevel() {
       score = 0;
       ballsLeft = BALLS_PER_LEVEL;
+      finishing = false;
       chainSizes = [];
       hits = [];
       var row = BONUS_MIN_ROW + Math.floor(Math.random() * (ROWS - BONUS_MIN_ROW));
@@ -259,18 +263,22 @@
           score += points;
           popups.push({ slot: slot, points: points, start: frame });
           if (!ball.spent) {
-            var spent = balls.length + waiting.length + value > MAX_IN_PLAY;
+            var spent = finishing || balls.length + waiting.length + value > MAX_IN_PLAY;
             for (var i = 0; i < value; i++) {
               if (!spent) chainSizes[ball.chain]++;
               waiting.push({ chain: ball.chain, spent: spent });
             }
           }
+          // the ball that reaches the points still makes whole balls, everything after it is spent
+          if (QUICK_FINISH && score >= target(level)) finishing = true;
         }
         return false;
       });
       popups = popups.filter(function (pp) { return frame - pp.start < POPUP_FRAMES; });
 
-      if (phase === "playing" && !balls.length && !waiting.length && ballsLeft === 0) {
+      // a level ends when all balls are gone: won with enough points, lost without balls to drop
+      if (phase === "playing" && chainSizes.length && !balls.length && !waiting.length &&
+          (score >= target(level) || ballsLeft === 0)) {
         if (score >= target(level)) {
           phase = "won";
         } else {
@@ -457,7 +465,7 @@
       if (phase !== "playing" || ballsLeft === 0) return;
       ballsLeft--;
       chainSizes.push(1);
-      launch(chainSizes.length - 1, false);
+      launch(chainSizes.length - 1, finishing);
       run();
     });
 
